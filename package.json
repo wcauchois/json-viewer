@@ -11,6 +11,7 @@
 		"format": "prettier --write \"*.{js,ts}\" tsconfig.json \"src/**/*.{css,tsx,ts}\""
 	},
 	"dependencies": {
+		"clsx": "^2.0.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0"
 	},
