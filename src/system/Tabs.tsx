@@ -25,7 +25,7 @@ export function Tabs(props: {
 						<div
 							key={i}
 							className={clsx(
-								"px-2 py-1 text-sm cursor-pointer",
+								"px-2 py-1 text-sm cursor-pointer select-none",
 								i === activeIndex ? "bg-blue-50" : undefined
 							)}
 							onClick={() => setActiveIndex(i)}

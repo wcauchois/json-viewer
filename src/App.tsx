@@ -1,26 +1,15 @@
 import clsx from "clsx"
 import { useText } from "./state"
 import { Tabs } from "./system/Tabs"
-import { ReactNode, useRef } from "react"
+import { useRef } from "react"
 import { SnackbarRenderer } from "./SnackbarRenderer"
 import { showSnackbar } from "./snackbar"
+import { Button } from "./system/Button"
 
 function ViewerTab(props: { className?: string }) {
 	const { className } = props
 
 	return <div className={clsx(className)}>Viewer</div>
-}
-
-function Button(props: { children: ReactNode; onClick?: () => void }) {
-	const { children, onClick } = props
-	return (
-		<div
-			className="text-sm hover:outline px-1 py-0.5 cursor-pointer rounded hover:outline-gray-400 outline-1 outline-transparent transition-all ease-in-out duration-75"
-			onClick={onClick}
-		>
-			{children}
-		</div>
-	)
 }
 
 interface ToolbarItem {
