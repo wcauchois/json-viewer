@@ -2,7 +2,8 @@ import clsx from "clsx"
 import { useText } from "./state"
 import { Tabs } from "./system/Tabs"
 import { ReactNode, useRef } from "react"
-import React from "react"
+import { SnackbarRenderer } from "./SnackbarRenderer"
+import { showSnackbar } from "./snackbar"
 
 function ViewerTab(props: { className?: string }) {
 	const { className } = props
@@ -75,6 +76,7 @@ function TextTab(props: { className?: string }) {
 									return
 								}
 								navigator.clipboard.writeText(text)
+								showSnackbar("Copied to clipboard!")
 							},
 						},
 					],
@@ -86,6 +88,8 @@ function TextTab(props: { className?: string }) {
 								if (parsed.type === "success") {
 									setText(JSON.stringify(parsed.value, null, 2))
 									textareaRef.current?.scrollTo(0, 0)
+								} else {
+									showSnackbar("Could not format: JSON does not parse.")
 								}
 							},
 						},
@@ -96,6 +100,10 @@ function TextTab(props: { className?: string }) {
 								if (parsed.type === "success") {
 									setText(JSON.stringify(parsed.value))
 									textareaRef.current?.scrollTo(0, 0)
+								} else {
+									showSnackbar(
+										"Could not remove whitespace: JSON does not parse."
+									)
 								}
 							},
 						},
@@ -123,6 +131,7 @@ function TextTab(props: { className?: string }) {
 function App() {
 	return (
 		<div className="flex w-screen h-screen">
+			<SnackbarRenderer />
 			<Tabs
 				className="w-full h-full"
 				contentContainerClassName="grow"
