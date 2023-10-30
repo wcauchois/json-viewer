@@ -109,6 +109,7 @@ function TextTab(props: { className?: string }) {
 			/>
 			<textarea
 				ref={textareaRef}
+				placeholder="Paste JSON here"
 				className="p-1 text-xs font-mono resize-none grow"
 				value={text}
 				onChange={e => setText(e.currentTarget.value)}
