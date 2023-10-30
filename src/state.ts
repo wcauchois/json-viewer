@@ -1,10 +1,17 @@
 import { create } from "zustand"
 import { Result } from "./utils"
+import { ASTNode, jsonToAST } from "./jsonAst"
 
 interface TextState {
 	text: string
 	setText: (newText: string) => void
-	parsed: Result<Record<string, unknown>, Error>
+	parsed: Result<
+		{
+			object: Record<string, unknown>
+			ast: ASTNode
+		},
+		Error
+	>
 }
 
 export const useText = create<TextState>(set => ({
@@ -16,9 +23,13 @@ export const useText = create<TextState>(set => ({
 	setText: newText => {
 		let parsed: TextState["parsed"]
 		try {
+			const object = JSON.parse(newText)
 			parsed = {
 				type: "success",
-				value: JSON.parse(newText),
+				value: {
+					object,
+					ast: jsonToAST(object),
+				},
 			}
 		} catch (err) {
 			parsed = {
