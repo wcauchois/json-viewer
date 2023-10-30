@@ -2,8 +2,17 @@ import { Tabs } from "./system/Tabs"
 import { SnackbarRenderer } from "./SnackbarRenderer"
 import { TextTab } from "./TextTab"
 import { ViewerTab } from "./ViewerTab"
+import { useEffect } from "react"
+import { useAppState } from "./appState"
 
 function App() {
+	useEffect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		;(window as any).__console = {
+			useAppState,
+		}
+	}, [])
+
 	return (
 		<div className="flex w-screen h-screen">
 			<SnackbarRenderer />

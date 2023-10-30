@@ -1,5 +1,5 @@
 import clsx from "clsx"
-import { useText } from "./state"
+import { useAppState } from "./appState"
 import { useRef } from "react"
 import { showSnackbar } from "./snackbar"
 import { Button } from "./system/Button"
@@ -30,8 +30,8 @@ function Toolbar(props: { itemGroups: ToolbarItem[][] }) {
 export function TextTab(props: { className?: string }) {
 	const { className } = props
 
-	const text = useText(state => state.text)
-	const setText = useText(state => state.setText)
+	const text = useAppState(state => state.text)
+	const setText = useAppState(state => state.setText)
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -65,9 +65,9 @@ export function TextTab(props: { className?: string }) {
 						{
 							name: "Format",
 							action: () => {
-								const parsed = useText.getState().parsed
-								if (parsed.type === "success") {
-									setText(JSON.stringify(parsed.value.object, null, 2))
+								const parseResult = useAppState.getState().parseResult
+								if (parseResult.type === "success") {
+									setText(JSON.stringify(parseResult.value.object, null, 2))
 									textareaRef.current?.scrollTo(0, 0)
 								} else {
 									showSnackbar("Could not format: JSON does not parse.")
@@ -77,9 +77,9 @@ export function TextTab(props: { className?: string }) {
 						{
 							name: "Remove whitespace",
 							action: () => {
-								const parsed = useText.getState().parsed
-								if (parsed.type === "success") {
-									setText(JSON.stringify(parsed.value.object))
+								const parseResult = useAppState.getState().parseResult
+								if (parseResult.type === "success") {
+									setText(JSON.stringify(parseResult.value.object))
 									textareaRef.current?.scrollTo(0, 0)
 								} else {
 									showSnackbar(

@@ -1,3 +1,5 @@
+import { unreachable } from "./utils"
+
 export type ASTNode =
 	| {
 			type: "object"
@@ -42,5 +44,25 @@ export function jsonToAST(input: unknown): ASTNode {
 		}
 	} else {
 		throw new Error(`Unexpected input for jsonToAST: ${JSON.stringify(input)}`)
+	}
+}
+
+export function flattenAST(node: ASTNode): ASTNode[] {
+	if (
+		node.type === "string" ||
+		node.type === "null" ||
+		node.type === "boolean" ||
+		node.type === "number"
+	) {
+		return [node]
+	} else if (node.type === "array") {
+		return [node, ...node.children.flatMap(childNode => flattenAST(childNode))]
+	} else if (node.type === "object") {
+		return [
+			node,
+			...node.children.flatMap(([, childNode]) => flattenAST(childNode)),
+		]
+	} else {
+		unreachable(node)
 	}
 }
