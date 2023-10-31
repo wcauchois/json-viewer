@@ -1,4 +1,4 @@
-import { unreachable } from "./utils"
+import { makeTypeGuard, unreachable } from "./utils"
 
 export type ASTNode =
 	| {
@@ -22,6 +22,24 @@ export type ASTNode =
 			children: ASTNode[]
 	  }
 	| { type: "null" }
+
+export type NodeTypesWithChildren = Extract<ASTNode["type"], "object" | "array">
+export type ASTNodeWithChildren = Extract<
+	ASTNode,
+	{ type: NodeTypesWithChildren }
+>
+export const isNodeWithChildren = makeTypeGuard<ASTNode, ASTNodeWithChildren>(
+	node =>
+		node.type === "object" || node.type === "array"
+			? { true: node }
+			: { false: node }
+)
+
+export type NodeTypesWithValue = Exclude<ASTNode["type"], NodeTypesWithChildren>
+export type ASTNodeWithValue = Extract<ASTNode, { type: NodeTypesWithValue }>
+export const isNodeWithValue = makeTypeGuard<ASTNode, ASTNodeWithValue>(node =>
+	isNodeWithChildren(node) ? { false: node } : { true: node }
+)
 
 export function jsonToAST(input: unknown): ASTNode {
 	if (input === null) {

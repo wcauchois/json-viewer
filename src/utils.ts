@@ -25,3 +25,17 @@ export type Assert<T, V extends T> = V
 export function isDefined<T>(value: T | undefined): value is T {
 	return value !== undefined
 }
+
+export function intersperseArray<Value, IntersperseValue>(
+	array: Array<Value>,
+	createIntersperseValue: (index: number) => IntersperseValue
+) {
+	const newArray: Array<Value | IntersperseValue> = []
+	array.forEach((value, index) => {
+		newArray.push(value)
+		if (array[index + 1]) {
+			newArray.push(createIntersperseValue(index))
+		}
+	})
+	return newArray
+}

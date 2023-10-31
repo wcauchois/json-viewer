@@ -1,16 +1,22 @@
 import clsx from "clsx"
 import { AppState, useAppState } from "./appState"
-import { ASTNode } from "./jsonAst"
+import {
+	ASTNode,
+	ASTNodeWithValue,
+	isNodeWithChildren,
+	isNodeWithValue,
+} from "./jsonAst"
 import {
 	IconBraces,
 	IconBracketsLine,
+	IconMagnifyingGlass,
 	IconMinusSquare,
 	IconPlusSquare,
 	IconSquare,
 } from "./icons"
 import { isDefined, unreachable } from "./utils"
 import _ from "lodash"
-import { useImperativeHandle, useRef } from "react"
+import { useEffect, useImperativeHandle, useRef, useState } from "react"
 import React from "react"
 
 const connectorStrokeColor = "rgb(156 163 175)"
@@ -80,21 +86,35 @@ function ConnectorIcon(props: { type: "vertical" | "corner" | "tri" }) {
 	)
 }
 
-function TypeIconForNode(props: { node: ASTNode }) {
-	const { node } = props
+function TypeIconForNode(props: { node: ASTNode; className?: string }) {
+	const { node, className } = props
 
 	if (node.type === "object") {
-		return <IconBraces />
+		return <IconBraces className={className} />
 	} else if (node.type === "array") {
-		return <IconBracketsLine />
+		return <IconBracketsLine className={className} />
 	} else if (node.type === "number") {
-		return <IconSquare className="text-green-400" />
+		return <IconSquare className={clsx(className, "text-green-400")} />
 	} else if (node.type === "string") {
-		return <IconSquare className="text-blue-400" />
+		return <IconSquare className={clsx(className, "text-blue-400")} />
 	} else if (node.type === "boolean") {
-		return <IconSquare className="text-yellow-400" />
+		return <IconSquare className={clsx(className, "text-yellow-400")} />
 	} else if (node.type === "null") {
-		return <IconSquare className="text-red-400" />
+		return <IconSquare className={clsx(className, "text-red-400")} />
+	} else {
+		unreachable(node)
+	}
+}
+
+function NodeValueRenderer(props: { node: ASTNodeWithValue }) {
+	const { node } = props
+
+	if (node.type === "boolean" || node.type === "number") {
+		return node.value.toString()
+	} else if (node.type === "null") {
+		return "null"
+	} else if (node.type === "string") {
+		return `"${node.value}"`
 	} else {
 		unreachable(node)
 	}
@@ -136,6 +156,17 @@ const NodeRenderer = React.forwardRef(
 		const expanded = expandedNodes.has(node)
 
 		const containerRef = useRef<HTMLDivElement>(null)
+		const nameAndValueRef = useRef<HTMLDivElement>(null)
+
+		const [isOverflowing, setIsOverflowing] = useState(false)
+		useEffect(() => {
+			const el = nameAndValueRef.current
+			if (!el) {
+				return
+			}
+			// https://stackoverflow.com/a/10017343
+			setIsOverflowing(el.offsetWidth < el.scrollWidth)
+		}, [nameAndValueRef])
 
 		useImperativeHandle(
 			ref,
@@ -152,13 +183,17 @@ const NodeRenderer = React.forwardRef(
 		let resolvedChildren:
 			| Array<[childName: string, childNode: ASTNode]>
 			| undefined
-		if (node.type === "array") {
-			resolvedChildren = node.children.map((childNode, index) => [
-				index.toString(),
-				childNode,
-			])
-		} else if (node.type === "object") {
-			resolvedChildren = node.children
+		if (isNodeWithChildren(node)) {
+			if (node.type === "array") {
+				resolvedChildren = node.children.map((childNode, index) => [
+					index.toString(),
+					childNode,
+				])
+			} else if (node.type === "object") {
+				resolvedChildren = node.children
+			} else {
+				unreachable(node)
+			}
 		}
 
 		const expandable = isDefined(resolvedChildren)
@@ -168,7 +203,7 @@ const NodeRenderer = React.forwardRef(
 				<div
 					ref={containerRef}
 					className={clsx(
-						"flex items-center gap-1 focus:bg-blue-100 outline-none",
+						"flex items-center gap-1 focus:bg-blue-100 outline-none relative group",
 						FocusableNodeClass
 					)}
 					tabIndex={0}
@@ -191,11 +226,15 @@ const NodeRenderer = React.forwardRef(
 					}}
 				>
 					{_.range(0, depth).map(i => (
-						<div key={i} className="self-stretch" style={{ width: "1em" }}>
+						<div
+							key={i}
+							className="self-stretch shrink-0"
+							style={{ width: "1em" }}
+						>
 							{depthLines.includes(i) && <ConnectorIcon type={"vertical"} />}
 						</div>
 					))}
-					<div className="self-stretch">
+					<div className="self-stretch shrink-0">
 						{isDefined(resolvedChildren) && resolvedChildren.length > 0 ? (
 							<ExpandIcon
 								onClick={() => {
@@ -216,21 +255,24 @@ const NodeRenderer = React.forwardRef(
 							<ConnectorIcon type={isLast ? "corner" : "tri"} />
 						)}
 					</div>
-					<TypeIconForNode node={node} />
-					<div>
+					<TypeIconForNode node={node} className="shrink-0" />
+					<div
+						className="whitespace-nowrap text-ellipsis overflow-hidden"
+						ref={nameAndValueRef}
+					>
 						{name ?? "JSON"}
-						{(node.type == "boolean" ||
-							node.type === "number" ||
-							node.type === "string" ||
-							node.type === "null") &&
-							` : ${
-								node.type === "null"
-									? "null"
-									: node.type === "string"
-									? `"${node.value}"`
-									: node.value.toString()
-							}`}
+						{isNodeWithValue(node) && (
+							<>
+								{" : "}
+								<NodeValueRenderer node={node} />
+							</>
+						)}
 					</div>
+					{isOverflowing && (
+						<div className="absolute right-0 top-0 bottom-0 flex items-center group-hover:visible invisible pr-1 pl-6 bg-gradient-to-r from-transparent via-white to-white">
+							<IconMagnifyingGlass className="cursor-pointer fill-gray-500 hover:fill-black" />
+						</div>
+					)}
 				</div>
 				{expanded &&
 					(resolvedChildren ?? []).map(([childName, childNode], i) => {

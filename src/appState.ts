@@ -18,6 +18,21 @@ export interface AppState {
 	setNodeExpanded: (node: ASTNode, expanded: boolean) => void
 }
 
+/**
+ * Recursively parses JSON that's contained in strings within the input object.
+ */
+const deepJsonParse = (input: string) =>
+	JSON.parse(input, (_key, value) => {
+		if (typeof value === "string" && value.startsWith("{")) {
+			try {
+				return JSON.parse(value)
+			} catch (err) {
+				// Fall through
+			}
+		}
+		return value
+	})
+
 export const useAppState = create<AppState>(set => ({
 	text: "",
 	expandedNodes: Set(),
@@ -36,7 +51,7 @@ export const useAppState = create<AppState>(set => ({
 		let parseResult: AppState["parseResult"]
 		let expandedNodes: AppState["expandedNodes"] = Set()
 		try {
-			const object = JSON.parse(newText)
+			const object = deepJsonParse(newText)
 			const ast = jsonToAST(object)
 			const flatAST = flattenAST(ast)
 			parseResult = {
