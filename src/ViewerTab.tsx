@@ -122,7 +122,6 @@ function NodeRenderer(props: {
 	} else if (node.type === "object") {
 		resolvedChildren = node.children
 	}
-	const expandable = isDefined(resolvedChildren)
 
 	return (
 		<>
@@ -133,7 +132,7 @@ function NodeRenderer(props: {
 					</div>
 				))}
 				<div className="self-stretch">
-					{expandable ? (
+					{isDefined(resolvedChildren) && resolvedChildren.length > 0 ? (
 						<ExpandIcon
 							onClick={() => setExpanded(!expanded)}
 							expanded={expanded}
@@ -164,7 +163,7 @@ function NodeRenderer(props: {
 							name={childName}
 							depth={depth + 1}
 							isLast={childIsLast}
-							depthLines={childIsLast ? depthLines : [...depthLines, depth]}
+							depthLines={[...depthLines, ...(!isLast ? [depth] : [])]}
 						/>
 					)
 				})}
