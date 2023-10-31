@@ -1,0 +1,16 @@
+{
+  "hi": {
+    "foo": "bar",
+    "bing": {
+      "hello": null,
+      "foobar foo bing baz": {"you": 2}
+    }
+  },
+  "arrayOfObjects": [
+    {"foo": 2},
+    {"foo": 2},
+    {"foo": 2},
+    {"foo": 2}
+  ],
+  "arrayOfInts": [1,2,3,4,5,6]
+}
