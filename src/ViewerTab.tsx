@@ -8,6 +8,7 @@ import {
 	IconPlusSquare,
 	IconSquare,
 } from "./icons"
+import { unreachable } from "./utils"
 
 function ExpandIcon(props: {
 	onClick: () => void
@@ -73,6 +74,26 @@ function ConnectorIcon(props: { type: "vertical" | "corner" | "tri" }) {
 	)
 }
 
+function TypeIconForNode(props: { node: ASTNode }) {
+	const { node } = props
+
+	if (node.type === "object") {
+		return <IconBraces />
+	} else if (node.type === "array") {
+		return <IconBracketsLine />
+	} else if (node.type === "number") {
+		return <IconSquare className="text-green-400" />
+	} else if (node.type === "string") {
+		return <IconSquare className="text-blue-400" />
+	} else if (node.type === "boolean") {
+		return <IconSquare className="text-yellow-400" />
+	} else if (node.type === "null") {
+		return <IconSquare className="text-red-400" />
+	} else {
+		unreachable(node)
+	}
+}
+
 function NodeRenderer(props: { node: ASTNode; name?: string; depth?: number }) {
 	const { node, name, depth = 0 } = props
 
@@ -101,9 +122,7 @@ function NodeRenderer(props: { node: ASTNode; name?: string; depth?: number }) {
 						<ConnectorIcon type="vertical" />
 					)}
 				</div>
-				{node.type === "object" && <IconBraces />}
-				{node.type === "array" && <IconBracketsLine />}
-				{node.type === "number" && <IconSquare className="text-blue-300" />}
+				<TypeIconForNode node={node} />
 				<div>
 					{name ?? "JSON"}
 					{(node.type == "boolean" ||
