@@ -8,7 +8,8 @@ import {
 	IconPlusSquare,
 	IconSquare,
 } from "./icons"
-import { unreachable } from "./utils"
+import { isDefined, unreachable } from "./utils"
+import _ from "lodash"
 
 function ExpandIcon(props: {
 	onClick: () => void
@@ -94,8 +95,14 @@ function TypeIconForNode(props: { node: ASTNode }) {
 	}
 }
 
-function NodeRenderer(props: { node: ASTNode; name?: string; depth?: number }) {
-	const { node, name, depth = 0 } = props
+function NodeRenderer(props: {
+	node: ASTNode
+	name?: string
+	depth?: number
+	depthLines?: number[]
+	isLast?: boolean
+}) {
+	const { node, name, depth = 0, depthLines = [], isLast } = props
 
 	const setNodeExpanded = useAppState(state => state.setNodeExpanded)
 	const expandedNodes = useAppState(state => state.expandedNodes)
@@ -103,23 +110,37 @@ function NodeRenderer(props: { node: ASTNode; name?: string; depth?: number }) {
 	const setExpanded = (newExpanded: boolean) =>
 		setNodeExpanded(node, newExpanded)
 	const expanded = expandedNodes.has(node)
-	const expandable = node.type === "array" || node.type === "object"
+
+	let resolvedChildren:
+		| Array<[childName: string, childNode: ASTNode]>
+		| undefined
+	if (node.type === "array") {
+		resolvedChildren = node.children.map((childNode, index) => [
+			index.toString(),
+			childNode,
+		])
+	} else if (node.type === "object") {
+		resolvedChildren = node.children
+	}
+	const expandable = isDefined(resolvedChildren)
 
 	return (
 		<>
-			<div
-				className="flex items-center gap-1"
-				style={{ marginLeft: `calc((1em + 4px) * ${depth})` }}
-			>
+			<div className="flex items-center gap-1">
+				{_.range(0, depth).map(i => (
+					<div key={i} className="self-stretch" style={{ width: "1em" }}>
+						{depthLines.includes(i) && <ConnectorIcon type={"vertical"} />}
+					</div>
+				))}
 				<div className="self-stretch">
 					{expandable ? (
 						<ExpandIcon
 							onClick={() => setExpanded(!expanded)}
 							expanded={expanded}
-							connectors={["top", "bottom"]}
+							connectors={["top", ...(isLast ? [] : ["bottom" as const])]}
 						/>
 					) : (
-						<ConnectorIcon type="vertical" />
+						<ConnectorIcon type={isLast ? "corner" : "tri"} />
 					)}
 				</div>
 				<TypeIconForNode node={node} />
@@ -132,28 +153,21 @@ function NodeRenderer(props: { node: ASTNode; name?: string; depth?: number }) {
 						` : ${node.type === "null" ? "null" : node.value.toString()}`}
 				</div>
 			</div>
-			{expanded && (
-				<>
-					{node.type === "object" &&
-						node.children.map(([childName, childNode]) => (
-							<NodeRenderer
-								key={childName}
-								node={childNode}
-								name={childName}
-								depth={depth + 1}
-							/>
-						))}
-					{node.type === "array" &&
-						node.children.map((childNode, i) => (
-							<NodeRenderer
-								key={i}
-								node={childNode}
-								name={i.toString()}
-								depth={depth + 1}
-							/>
-						))}
-				</>
-			)}
+			{expanded &&
+				(resolvedChildren ?? []).map(([childName, childNode], i) => {
+					const childIsLast =
+						isDefined(resolvedChildren) && i === resolvedChildren.length - 1
+					return (
+						<NodeRenderer
+							key={childName}
+							node={childNode}
+							name={childName}
+							depth={depth + 1}
+							isLast={childIsLast}
+							depthLines={childIsLast ? depthLines : [...depthLines, depth]}
+						/>
+					)
+				})}
 		</>
 	)
 }

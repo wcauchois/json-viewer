@@ -21,3 +21,7 @@ export const makeTypeGuard =
 		"true" in typeGuard(value)
 
 export type Assert<T, V extends T> = V
+
+export function isDefined<T>(value: T | undefined): value is T {
+	return value !== undefined
+}
