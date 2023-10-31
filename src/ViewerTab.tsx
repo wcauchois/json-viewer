@@ -10,7 +10,8 @@ import {
 } from "./icons"
 import { isDefined, unreachable } from "./utils"
 import _ from "lodash"
-import { useRef } from "react"
+import { useImperativeHandle, useRef } from "react"
+import React from "react"
 
 function ExpandIcon(
 	props: React.SVGProps<SVGSVGElement> & {
@@ -99,116 +100,163 @@ function TypeIconForNode(props: { node: ASTNode }) {
 
 const FocusableNodeClass = "app-focusable-node"
 
-function NodeRenderer(props: {
+interface NodeRendererProps {
 	node: ASTNode
 	name?: string
 	depth?: number
 	depthLines?: number[]
 	isLast?: boolean
 	isRoot?: boolean
-}) {
-	const { node, name, depth = 0, depthLines = [], isLast, isRoot } = props
-
-	const setNodeExpanded = useAppState(state => state.setNodeExpanded)
-	const expandedNodes = useAppState(state => state.expandedNodes)
-
-	const setExpanded = (newExpanded: boolean) =>
-		setNodeExpanded(node, newExpanded)
-	const expanded = expandedNodes.has(node)
-
-	const containerRef = useRef<HTMLDivElement>(null)
-
-	let resolvedChildren:
-		| Array<[childName: string, childNode: ASTNode]>
-		| undefined
-	if (node.type === "array") {
-		resolvedChildren = node.children.map((childNode, index) => [
-			index.toString(),
-			childNode,
-		])
-	} else if (node.type === "object") {
-		resolvedChildren = node.children
-	}
-
-	return (
-		<>
-			<div
-				ref={containerRef}
-				className={clsx(
-					"flex items-center gap-1 focus:bg-blue-100 outline-none",
-					FocusableNodeClass
-				)}
-				tabIndex={0}
-				onKeyDown={e => {
-					if (document.activeElement === containerRef.current) {
-						if (e.key === "ArrowRight") {
-							setExpanded(true)
-						} else if (e.key === "ArrowLeft") {
-							setExpanded(false)
-						}
-					}
-				}}
-			>
-				{_.range(0, depth).map(i => (
-					<div key={i} className="self-stretch" style={{ width: "1em" }}>
-						{depthLines.includes(i) && <ConnectorIcon type={"vertical"} />}
-					</div>
-				))}
-				<div className="self-stretch">
-					{isDefined(resolvedChildren) && resolvedChildren.length > 0 ? (
-						<ExpandIcon
-							onClick={() => {
-								setExpanded(!expanded)
-							}}
-							onMouseDown={e => {
-								// Prevent expand/collapse from changing focus.
-								e.preventDefault()
-								e.stopPropagation()
-							}}
-							expanded={expanded}
-							connectors={[
-								"top",
-								...(isLast || isRoot ? [] : ["bottom" as const]),
-							]}
-						/>
-					) : (
-						<ConnectorIcon type={isLast ? "corner" : "tri"} />
-					)}
-				</div>
-				<TypeIconForNode node={node} />
-				<div>
-					{name ?? "JSON"}
-					{(node.type == "boolean" ||
-						node.type === "number" ||
-						node.type === "string" ||
-						node.type === "null") &&
-						` : ${
-							node.type === "null"
-								? "null"
-								: node.type === "string"
-								? `"${node.value}"`
-								: node.value.toString()
-						}`}
-				</div>
-			</div>
-			{expanded &&
-				(resolvedChildren ?? []).map(([childName, childNode], i) => {
-					const childIsLast =
-						isDefined(resolvedChildren) && i === resolvedChildren.length - 1
-					return (
-						<NodeRenderer
-							key={childName}
-							node={childNode}
-							name={childName}
-							depth={depth + 1}
-							isLast={childIsLast}
-							depthLines={[...depthLines, ...(isLast || isRoot ? [] : [depth])]}
-						/>
-					)
-				})}
-		</>
-	)
+	collapseAndFocusParent: () => void
 }
+
+interface NodeRendererHandle {
+	focus(): void
+}
+
+const NodeRenderer = React.forwardRef(
+	(props: NodeRendererProps, ref: React.Ref<NodeRendererHandle>) => {
+		const {
+			node,
+			name,
+			depth = 0,
+			depthLines = [],
+			isLast,
+			isRoot,
+			collapseAndFocusParent,
+		} = props
+
+		const setNodeExpanded = useAppState(state => state.setNodeExpanded)
+		const expandedNodes = useAppState(state => state.expandedNodes)
+
+		const setExpanded = (newExpanded: boolean) =>
+			setNodeExpanded(node, newExpanded)
+		const expanded = expandedNodes.has(node)
+
+		const containerRef = useRef<HTMLDivElement>(null)
+
+		useImperativeHandle(
+			ref,
+			() => ({
+				focus() {
+					containerRef.current?.focus()
+				},
+			}),
+			[]
+		)
+
+		const firstChildRef = useRef<NodeRendererHandle>(null)
+
+		let resolvedChildren:
+			| Array<[childName: string, childNode: ASTNode]>
+			| undefined
+		if (node.type === "array") {
+			resolvedChildren = node.children.map((childNode, index) => [
+				index.toString(),
+				childNode,
+			])
+		} else if (node.type === "object") {
+			resolvedChildren = node.children
+		}
+
+		const expandable = isDefined(resolvedChildren)
+
+		return (
+			<>
+				<div
+					ref={containerRef}
+					className={clsx(
+						"flex items-center gap-1 focus:bg-blue-100 outline-none",
+						FocusableNodeClass
+					)}
+					tabIndex={0}
+					onKeyDown={e => {
+						if (document.activeElement === containerRef.current) {
+							if (e.key === "ArrowRight" || e.key === "l") {
+								if (expandable && expanded) {
+									firstChildRef.current?.focus()
+								} else {
+									setExpanded(true)
+								}
+							} else if (e.key === "ArrowLeft" || e.key === "h") {
+								if (!expandable || !expanded) {
+									collapseAndFocusParent()
+								} else {
+									setExpanded(false)
+								}
+							}
+						}
+					}}
+				>
+					{_.range(0, depth).map(i => (
+						<div key={i} className="self-stretch" style={{ width: "1em" }}>
+							{depthLines.includes(i) && <ConnectorIcon type={"vertical"} />}
+						</div>
+					))}
+					<div className="self-stretch">
+						{isDefined(resolvedChildren) && resolvedChildren.length > 0 ? (
+							<ExpandIcon
+								onClick={() => {
+									setExpanded(!expanded)
+								}}
+								onMouseDown={e => {
+									// Prevent expand/collapse from changing focus.
+									e.preventDefault()
+									e.stopPropagation()
+								}}
+								expanded={expanded}
+								connectors={[
+									"top",
+									...(isLast || isRoot ? [] : ["bottom" as const]),
+								]}
+							/>
+						) : (
+							<ConnectorIcon type={isLast ? "corner" : "tri"} />
+						)}
+					</div>
+					<TypeIconForNode node={node} />
+					<div>
+						{name ?? "JSON"}
+						{(node.type == "boolean" ||
+							node.type === "number" ||
+							node.type === "string" ||
+							node.type === "null") &&
+							` : ${
+								node.type === "null"
+									? "null"
+									: node.type === "string"
+									? `"${node.value}"`
+									: node.value.toString()
+							}`}
+					</div>
+				</div>
+				{expanded &&
+					(resolvedChildren ?? []).map(([childName, childNode], i) => {
+						const childIsLast =
+							isDefined(resolvedChildren) && i === resolvedChildren.length - 1
+						return (
+							<NodeRenderer
+								ref={i === 0 ? firstChildRef : undefined}
+								key={childName}
+								node={childNode}
+								name={childName}
+								depth={depth + 1}
+								isLast={childIsLast}
+								depthLines={[
+									...depthLines,
+									...(isLast || isRoot ? [] : [depth]),
+								]}
+								collapseAndFocusParent={() => {
+									setExpanded(false)
+									containerRef.current?.focus()
+								}}
+							/>
+						)
+					})}
+			</>
+		)
+	}
+)
 
 function ViewerTabSuccessfulParse(props: {
 	parseResult: Extract<AppState["parseResult"], { type: "success" }>
@@ -227,9 +275,9 @@ function ViewerTabSuccessfulParse(props: {
 				}
 
 				let moveDirection: "previous" | "next" | undefined
-				if (e.key === "ArrowUp") {
+				if (e.key === "ArrowUp" || e.key === "k") {
 					moveDirection = "previous"
-				} else if (e.key === "ArrowDown") {
+				} else if (e.key === "ArrowDown" || e.key === "j") {
 					moveDirection = "next"
 				}
 
@@ -249,7 +297,11 @@ function ViewerTabSuccessfulParse(props: {
 				}
 			}}
 		>
-			<NodeRenderer node={parseResult.value.ast} isRoot={true} />
+			<NodeRenderer
+				node={parseResult.value.ast}
+				isRoot={true}
+				collapseAndFocusParent={() => {}}
+			/>
 		</div>
 	)
 }

@@ -3,7 +3,7 @@ import { Result } from "./utils"
 import { ASTNode, flattenAST, jsonToAST } from "./jsonAst"
 import { Set } from "immutable"
 
-interface AppState {
+export interface AppState {
 	text: string
 	setText: (newText: string) => void
 	expandedNodes: Set<ASTNode>
