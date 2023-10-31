@@ -1,5 +1,5 @@
 import clsx from "clsx"
-import { useAppState } from "./appState"
+import { AppState, useAppState } from "./appState"
 import { ASTNode } from "./jsonAst"
 import {
 	IconBraces,
@@ -10,19 +10,21 @@ import {
 } from "./icons"
 import { isDefined, unreachable } from "./utils"
 import _ from "lodash"
+import { useRef } from "react"
 
-function ExpandIcon(props: {
-	onClick: () => void
-	expanded: boolean
-	connectors: Array<"top" | "bottom">
-}) {
-	const { onClick, expanded, connectors } = props
+function ExpandIcon(
+	props: React.SVGProps<SVGSVGElement> & {
+		expanded: boolean
+		connectors: Array<"top" | "bottom">
+	}
+) {
+	const { expanded, connectors, ...restProps } = props
 	const Component = expanded ? IconMinusSquare : IconPlusSquare
 	return (
 		<Component
 			className="cursor-pointer select-none"
 			height="100%"
-			onClick={onClick}
+			{...restProps}
 		>
 			{connectors.includes("top") && (
 				<line
@@ -30,7 +32,7 @@ function ExpandIcon(props: {
 					y1="-512"
 					x2="512"
 					y2="144"
-					stroke-width="72"
+					strokeWidth="72"
 					stroke="currentColor"
 				/>
 			)}
@@ -40,7 +42,7 @@ function ExpandIcon(props: {
 					y1="880"
 					x2="512"
 					y2="1536"
-					stroke-width="72"
+					strokeWidth="72"
 					stroke="currentColor"
 				/>
 			)}
@@ -58,7 +60,7 @@ function ConnectorIcon(props: { type: "vertical" | "corner" | "tri" }) {
 				y1="-512"
 				x2="512"
 				y2={type === "corner" ? 512 : 1536}
-				stroke-width="72"
+				strokeWidth="72"
 				stroke="currentColor"
 			/>
 			{(type === "corner" || type === "tri") && (
@@ -67,7 +69,7 @@ function ConnectorIcon(props: { type: "vertical" | "corner" | "tri" }) {
 					y1="512"
 					x2="1536"
 					y2="512"
-					stroke-width="72"
+					strokeWidth="72"
 					stroke="currentColor"
 				/>
 			)}
@@ -95,6 +97,8 @@ function TypeIconForNode(props: { node: ASTNode }) {
 	}
 }
 
+const FocusableNodeClass = "app-focusable-node"
+
 function NodeRenderer(props: {
 	node: ASTNode
 	name?: string
@@ -112,6 +116,8 @@ function NodeRenderer(props: {
 		setNodeExpanded(node, newExpanded)
 	const expanded = expandedNodes.has(node)
 
+	const containerRef = useRef<HTMLDivElement>(null)
+
 	let resolvedChildren:
 		| Array<[childName: string, childNode: ASTNode]>
 		| undefined
@@ -126,7 +132,23 @@ function NodeRenderer(props: {
 
 	return (
 		<>
-			<div className="flex items-center gap-1">
+			<div
+				ref={containerRef}
+				className={clsx(
+					"flex items-center gap-1 focus:bg-blue-100 outline-none",
+					FocusableNodeClass
+				)}
+				tabIndex={0}
+				onKeyDown={e => {
+					if (document.activeElement === containerRef.current) {
+						if (e.key === "ArrowRight") {
+							setExpanded(true)
+						} else if (e.key === "ArrowLeft") {
+							setExpanded(false)
+						}
+					}
+				}}
+			>
 				{_.range(0, depth).map(i => (
 					<div key={i} className="self-stretch" style={{ width: "1em" }}>
 						{depthLines.includes(i) && <ConnectorIcon type={"vertical"} />}
@@ -135,7 +157,14 @@ function NodeRenderer(props: {
 				<div className="self-stretch">
 					{isDefined(resolvedChildren) && resolvedChildren.length > 0 ? (
 						<ExpandIcon
-							onClick={() => setExpanded(!expanded)}
+							onClick={() => {
+								setExpanded(!expanded)
+							}}
+							onMouseDown={e => {
+								// Prevent expand/collapse from changing focus.
+								e.preventDefault()
+								e.stopPropagation()
+							}}
 							expanded={expanded}
 							connectors={[
 								"top",
@@ -181,6 +210,50 @@ function NodeRenderer(props: {
 	)
 }
 
+function ViewerTabSuccessfulParse(props: {
+	parseResult: Extract<AppState["parseResult"], { type: "success" }>
+}) {
+	const { parseResult } = props
+
+	const containerRef = useRef<HTMLDivElement>(null)
+
+	return (
+		<div
+			className="flex flex-col text-sm"
+			ref={containerRef}
+			onKeyDown={e => {
+				if (!containerRef.current) {
+					return
+				}
+
+				let moveDirection: "previous" | "next" | undefined
+				if (e.key === "ArrowUp") {
+					moveDirection = "previous"
+				} else if (e.key === "ArrowDown") {
+					moveDirection = "next"
+				}
+
+				if (isDefined(moveDirection)) {
+					const focusedNode = containerRef.current.querySelector(
+						`.${FocusableNodeClass}:focus`
+					)
+					if (focusedNode) {
+						const desiredSibling =
+							moveDirection === "next"
+								? focusedNode.nextElementSibling
+								: focusedNode.previousElementSibling
+						if (desiredSibling && desiredSibling instanceof HTMLElement) {
+							desiredSibling.focus()
+						}
+					}
+				}
+			}}
+		>
+			<NodeRenderer node={parseResult.value.ast} isRoot={true} />
+		</div>
+	)
+}
+
 export function ViewerTab(props: { className?: string }) {
 	const { className } = props
 
@@ -189,9 +262,7 @@ export function ViewerTab(props: { className?: string }) {
 	return (
 		<div className={clsx(className)}>
 			{parseResult.type === "success" ? (
-				<div className="flex flex-col text-sm">
-					<NodeRenderer node={parseResult.value.ast} isRoot={true} />
-				</div>
+				<ViewerTabSuccessfulParse parseResult={parseResult} />
 			) : (
 				<div className="text-sm text-red-700 p-1">Failed to parse</div>
 			)}
