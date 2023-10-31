@@ -17,12 +17,21 @@ export function Modal(props: {
 				}}
 			>
 				<div
+					tabIndex={0}
 					className={clsx(
-						"bg-white border rounded border-gray-500 flex flex-col shadow",
+						"bg-white border rounded border-gray-500 flex flex-col shadow outline-none",
 						className
 					)}
 					onClick={e => {
+						// Prevent click from going to the overlay
 						e.stopPropagation()
+					}}
+					ref={el => el?.focus()}
+					onKeyDown={e => {
+						e.stopPropagation()
+						if (e.key === "Escape") {
+							onClose?.()
+						}
 					}}
 				>
 					<div className="flex justify-end p-2 border-b border-solid">

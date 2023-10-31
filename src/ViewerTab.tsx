@@ -146,10 +146,10 @@ function DetailModal(props: {
 	return (
 		<Modal
 			onClose={onClose}
-			className="min-w-[min(600px,100vw-40px)] max-w-[calc(100vw-40px)]"
+			className="min-w-[min(600px,100vw-40px)] max-w-[calc(100vw-40px)] max-h-[calc(100vh-40px)]"
 		>
 			<div className="flex">
-				<pre className="overflow-y-scroll px-2 text-xs">{node.value}</pre>
+				<pre className="overflow-scroll px-2 text-xs">{node.value}</pre>
 			</div>
 		</Modal>
 	)
@@ -200,6 +200,10 @@ const NodeRenderer = React.forwardRef(
 		const firstChildRef = useRef<NodeRendererHandle>(null)
 
 		const [detailModalOpen, setDetailModalOpen] = useState(false)
+		const closeDetailModal = () => {
+			setDetailModalOpen(false)
+			containerRef.current?.focus() // Return focus
+		}
 
 		let resolvedChildren:
 			| Array<[childName: string, childNode: ASTNode]>
@@ -242,6 +246,10 @@ const NodeRenderer = React.forwardRef(
 								} else {
 									setExpanded(false)
 								}
+							} else if (e.key === "Enter") {
+								if (isOverflowing && node.type === "string") {
+									setDetailModalOpen(true)
+								}
 							}
 						}
 					}}
@@ -262,6 +270,7 @@ const NodeRenderer = React.forwardRef(
 									setExpanded(!expanded)
 								}}
 								onMouseDown={e => {
+									// Prevent capturing focus
 									e.preventDefault()
 								}}
 								expanded={expanded}
@@ -292,17 +301,17 @@ const NodeRenderer = React.forwardRef(
 							<div className="absolute right-0 top-0 bottom-0 flex items-center group-hover:visible invisible pr-1 pl-6 bg-gradient-to-r from-transparent via-white to-white">
 								<IconMagnifyingGlass
 									className="cursor-pointer fill-gray-500 hover:fill-black"
-									onClick={e => {
-										e.preventDefault()
+									onClick={() => {
 										setDetailModalOpen(true)
+									}}
+									onMouseDown={e => {
+										// Prevent capturing focus
+										e.preventDefault()
 									}}
 								/>
 							</div>
 							{detailModalOpen && (
-								<DetailModal
-									onClose={() => setDetailModalOpen(false)}
-									node={node}
-								/>
+								<DetailModal onClose={() => closeDetailModal()} node={node} />
 							)}
 						</>
 					)}
