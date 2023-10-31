@@ -101,8 +101,9 @@ function NodeRenderer(props: {
 	depth?: number
 	depthLines?: number[]
 	isLast?: boolean
+	isRoot?: boolean
 }) {
-	const { node, name, depth = 0, depthLines = [], isLast } = props
+	const { node, name, depth = 0, depthLines = [], isLast, isRoot } = props
 
 	const setNodeExpanded = useAppState(state => state.setNodeExpanded)
 	const expandedNodes = useAppState(state => state.expandedNodes)
@@ -136,7 +137,10 @@ function NodeRenderer(props: {
 						<ExpandIcon
 							onClick={() => setExpanded(!expanded)}
 							expanded={expanded}
-							connectors={["top", ...(isLast ? [] : ["bottom" as const])]}
+							connectors={[
+								"top",
+								...(isLast || isRoot ? [] : ["bottom" as const]),
+							]}
 						/>
 					) : (
 						<ConnectorIcon type={isLast ? "corner" : "tri"} />
@@ -149,7 +153,13 @@ function NodeRenderer(props: {
 						node.type === "number" ||
 						node.type === "string" ||
 						node.type === "null") &&
-						` : ${node.type === "null" ? "null" : node.value.toString()}`}
+						` : ${
+							node.type === "null"
+								? "null"
+								: node.type === "string"
+								? `"${node.value}"`
+								: node.value.toString()
+						}`}
 				</div>
 			</div>
 			{expanded &&
@@ -163,7 +173,7 @@ function NodeRenderer(props: {
 							name={childName}
 							depth={depth + 1}
 							isLast={childIsLast}
-							depthLines={[...depthLines, ...(!isLast ? [depth] : [])]}
+							depthLines={[...depthLines, ...(isLast || isRoot ? [] : [depth])]}
 						/>
 					)
 				})}
@@ -179,8 +189,8 @@ export function ViewerTab(props: { className?: string }) {
 	return (
 		<div className={clsx(className)}>
 			{parseResult.type === "success" ? (
-				<div className="flex flex-col">
-					<NodeRenderer node={parseResult.value.ast} />
+				<div className="flex flex-col text-sm">
+					<NodeRenderer node={parseResult.value.ast} isRoot={true} />
 				</div>
 			) : (
 				<div className="text-sm text-red-700 p-1">Failed to parse</div>

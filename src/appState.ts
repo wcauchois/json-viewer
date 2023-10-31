@@ -47,7 +47,7 @@ export const useAppState = create<AppState>(set => ({
 					flatAST,
 				},
 			}
-			expandedNodes = Set(flatAST) // Default all expanded
+			expandedNodes = Set([ast])
 		} catch (err) {
 			parseResult = {
 				type: "failure",
