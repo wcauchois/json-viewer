@@ -18,6 +18,7 @@ import { isDefined, unreachable } from "./utils"
 import _ from "lodash"
 import { useEffect, useImperativeHandle, useRef, useState } from "react"
 import React from "react"
+import { Modal } from "./system/Modal"
 
 const connectorStrokeColor = "rgb(156 163 175)"
 
@@ -136,6 +137,24 @@ interface NodeRendererHandle {
 	focus(): void
 }
 
+function DetailModal(props: {
+	node: Extract<ASTNode, { type: "string" }>
+	onClose: () => void
+}) {
+	const { onClose, node } = props
+
+	return (
+		<Modal
+			onClose={onClose}
+			className="min-w-[min(600px,100vw-40px)] max-w-[calc(100vw-40px)]"
+		>
+			<div className="flex">
+				<pre className="overflow-y-scroll px-2 text-xs">{node.value}</pre>
+			</div>
+		</Modal>
+	)
+}
+
 const NodeRenderer = React.forwardRef(
 	(props: NodeRendererProps, ref: React.Ref<NodeRendererHandle>) => {
 		const {
@@ -179,6 +198,8 @@ const NodeRenderer = React.forwardRef(
 		)
 
 		const firstChildRef = useRef<NodeRendererHandle>(null)
+
+		const [detailModalOpen, setDetailModalOpen] = useState(false)
 
 		let resolvedChildren:
 			| Array<[childName: string, childNode: ASTNode]>
@@ -241,9 +262,7 @@ const NodeRenderer = React.forwardRef(
 									setExpanded(!expanded)
 								}}
 								onMouseDown={e => {
-									// Prevent expand/collapse from changing focus.
 									e.preventDefault()
-									e.stopPropagation()
 								}}
 								expanded={expanded}
 								connectors={[
@@ -268,10 +287,24 @@ const NodeRenderer = React.forwardRef(
 							</>
 						)}
 					</div>
-					{isOverflowing && (
-						<div className="absolute right-0 top-0 bottom-0 flex items-center group-hover:visible invisible pr-1 pl-6 bg-gradient-to-r from-transparent via-white to-white">
-							<IconMagnifyingGlass className="cursor-pointer fill-gray-500 hover:fill-black" />
-						</div>
+					{isOverflowing && node.type === "string" && (
+						<>
+							<div className="absolute right-0 top-0 bottom-0 flex items-center group-hover:visible invisible pr-1 pl-6 bg-gradient-to-r from-transparent via-white to-white">
+								<IconMagnifyingGlass
+									className="cursor-pointer fill-gray-500 hover:fill-black"
+									onClick={e => {
+										e.preventDefault()
+										setDetailModalOpen(true)
+									}}
+								/>
+							</div>
+							{detailModalOpen && (
+								<DetailModal
+									onClose={() => setDetailModalOpen(false)}
+									node={node}
+								/>
+							)}
+						</>
 					)}
 				</div>
 				{expanded &&
