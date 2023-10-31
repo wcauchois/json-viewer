@@ -13,6 +13,8 @@ import _ from "lodash"
 import { useImperativeHandle, useRef } from "react"
 import React from "react"
 
+const connectorStrokeColor = "rgb(156 163 175)"
+
 function ExpandIcon(
 	props: React.SVGProps<SVGSVGElement> & {
 		expanded: boolean
@@ -34,7 +36,7 @@ function ExpandIcon(
 					x2="512"
 					y2="144"
 					strokeWidth="72"
-					stroke="currentColor"
+					stroke={connectorStrokeColor}
 				/>
 			)}
 			{connectors.includes("bottom") && (
@@ -44,7 +46,7 @@ function ExpandIcon(
 					x2="512"
 					y2="1536"
 					strokeWidth="72"
-					stroke="currentColor"
+					stroke={connectorStrokeColor}
 				/>
 			)}
 		</Component>
@@ -62,7 +64,7 @@ function ConnectorIcon(props: { type: "vertical" | "corner" | "tri" }) {
 				x2="512"
 				y2={type === "corner" ? 512 : 1536}
 				strokeWidth="72"
-				stroke="currentColor"
+				stroke={connectorStrokeColor}
 			/>
 			{(type === "corner" || type === "tri") && (
 				<line
@@ -71,7 +73,7 @@ function ConnectorIcon(props: { type: "vertical" | "corner" | "tri" }) {
 					x2="1536"
 					y2="512"
 					strokeWidth="72"
-					stroke="currentColor"
+					stroke={connectorStrokeColor}
 				/>
 			)}
 		</svg>
