@@ -20,6 +20,7 @@ import { useEffect, useImperativeHandle, useRef, useState } from "react"
 import React from "react"
 import { Modal } from "./system/Modal"
 import { showSnackbar } from "./snackbar"
+import { useEventListener } from "usehooks-ts"
 
 const connectorStrokeColor = "rgb(156 163 175)"
 
@@ -359,6 +360,15 @@ function ViewerTabSuccessfulParse(props: {
 	const { parseResult } = props
 
 	const containerRef = useRef<HTMLDivElement>(null)
+	const rootNodeRendererRef = useRef<NodeRendererHandle>(null)
+
+	useEventListener("keydown", async e => {
+		if (e.target === document.body) {
+			if (["h", "j", "k", "l", "Enter"].includes(e.key)) {
+				rootNodeRendererRef.current?.focus()
+			}
+		}
+	})
 
 	return (
 		<div
@@ -389,10 +399,18 @@ function ViewerTabSuccessfulParse(props: {
 							desiredSibling.focus()
 						}
 					}
+				} else if (e.key === "Escape") {
+					if (
+						document.activeElement &&
+						document.activeElement instanceof HTMLElement
+					) {
+						document.activeElement.blur()
+					}
 				}
 			}}
 		>
 			<NodeRenderer
+				ref={rootNodeRendererRef}
 				node={parseResult.value.ast}
 				isRoot={true}
 				collapseAndFocusParent={() => {}}

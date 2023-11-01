@@ -3,6 +3,7 @@ import { useAppState } from "./appState"
 import { useRef } from "react"
 import { showSnackbar } from "./snackbar"
 import { Button } from "./system/Button"
+import { useEventListener } from "usehooks-ts"
 
 interface ToolbarItem {
 	name: string
@@ -35,6 +36,15 @@ export function TextTab(props: { className?: string }) {
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 
+	useEventListener("keydown", e => {
+		if (e.target === document.body) {
+			if (e.key === "Enter") {
+				e.preventDefault()
+				textareaRef.current?.focus()
+			}
+		}
+	})
+
 	return (
 		<div className={clsx(className, "w-full h-full flex flex-col")}>
 			<Toolbar
@@ -43,11 +53,8 @@ export function TextTab(props: { className?: string }) {
 						{
 							name: "Paste",
 							action: async () => {
-								if (!navigator.clipboard) {
-									return
-								}
-								const clipboardText = await navigator.clipboard.readText()
-								setText(clipboardText)
+								const clipboardText = await navigator.clipboard?.readText()
+								setText(clipboardText ?? "")
 							},
 						},
 						{
@@ -102,6 +109,11 @@ export function TextTab(props: { className?: string }) {
 				className="p-1 text-xs font-mono resize-none grow"
 				value={text}
 				onChange={e => setText(e.currentTarget.value)}
+				onKeyDown={e => {
+					if (e.key === "Escape") {
+						textareaRef.current?.blur()
+					}
+				}}
 			/>
 		</div>
 	)
