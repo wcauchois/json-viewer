@@ -19,6 +19,7 @@ import _ from "lodash"
 import { useEffect, useImperativeHandle, useRef, useState } from "react"
 import React from "react"
 import { Modal } from "./system/Modal"
+import { showSnackbar } from "./snackbar"
 
 const connectorStrokeColor = "rgb(156 163 175)"
 
@@ -146,6 +147,14 @@ function DetailModal(props: {
 	return (
 		<Modal
 			onClose={onClose}
+			onKeyDown={e => {
+				if (e.key === "Enter") {
+					onClose()
+				} else if (e.key === "c") {
+					navigator.clipboard.writeText(node.value)
+					showSnackbar("Copied field value to clipboard!")
+				}
+			}}
 			className="min-w-[min(600px,100vw-40px)] max-w-[calc(100vw-40px)] max-h-[calc(100vh-40px)]"
 		>
 			<div className="flex">

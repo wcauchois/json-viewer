@@ -53,10 +53,7 @@ export function TextTab(props: { className?: string }) {
 						{
 							name: "Copy",
 							action: async () => {
-								if (!navigator.clipboard) {
-									return
-								}
-								navigator.clipboard.writeText(text)
+								navigator.clipboard?.writeText(text)
 								showSnackbar("Copied to clipboard!")
 							},
 						},

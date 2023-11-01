@@ -6,8 +6,9 @@ export function Modal(props: {
 	children: ReactNode
 	className?: string
 	onClose?: () => void
+	onKeyDown?: React.KeyboardEventHandler
 }) {
-	const { children, className, onClose } = props
+	const { children, className, onClose, onKeyDown } = props
 	return (
 		<>
 			<div
@@ -32,6 +33,7 @@ export function Modal(props: {
 						if (e.key === "Escape") {
 							onClose?.()
 						}
+						onKeyDown?.(e)
 					}}
 				>
 					<div className="flex justify-end p-2 border-b border-solid">
