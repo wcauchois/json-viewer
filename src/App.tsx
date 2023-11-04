@@ -6,6 +6,8 @@ import { useEffect, useRef } from "react"
 import { useAppState } from "./appState"
 import { useEventListener } from "usehooks-ts"
 import { showSnackbar } from "./snackbar"
+import { Panel, PanelGroup } from "react-resizable-panels"
+import { ResizeHandle } from "./reactUtils"
 
 function App() {
 	useEffect(() => {
@@ -39,22 +41,31 @@ function App() {
 	return (
 		<div className="flex w-screen h-screen">
 			<SnackbarRenderer />
-			<Tabs
-				ref={tabsRef}
-				className="w-full h-full"
-				contentContainerClassName="grow"
-				defaultIndex={1}
-				tabs={[
-					{
-						name: "Viewer",
-						render: args => <ViewerTab {...args} />,
-					},
-					{
-						name: "Text",
-						render: args => <TextTab {...args} />,
-					},
-				]}
-			/>
+
+			<PanelGroup direction="horizontal">
+				<Panel>
+					<div>Hello, world</div>
+				</Panel>
+				<ResizeHandle direction="horizontal" />
+				<Panel>
+					<Tabs
+						ref={tabsRef}
+						className="w-full h-full"
+						contentContainerClassName="grow"
+						defaultIndex={1}
+						tabs={[
+							{
+								name: "Viewer",
+								render: args => <ViewerTab {...args} />,
+							},
+							{
+								name: "Text",
+								render: args => <TextTab {...args} />,
+							},
+						]}
+					/>
+				</Panel>
+			</PanelGroup>
 		</div>
 	)
 }
