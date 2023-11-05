@@ -4,7 +4,7 @@ import {
 	useAllCheckpoints,
 } from "./CheckpointStore"
 import { useAppState } from "./appState"
-import { IconDownload, IconUpload } from "./icons"
+import { IconUpload } from "./icons"
 
 function CheckpointItem(props: { checkpoint: CheckpointModel }) {
 	const { checkpoint } = props

@@ -2,7 +2,7 @@ import { SnackbarRenderer } from "./SnackbarRenderer"
 import { TextTab } from "./TextTab"
 import { ViewerTab } from "./ViewerTab"
 import { ReactNode, useCallback, useEffect, useState } from "react"
-import { useAppState } from "./appState"
+import { useAppState, useAppStateStorage } from "./appState"
 import { useEventListener } from "usehooks-ts"
 import { showSnackbar } from "./snackbar"
 import { Panel, PanelGroup } from "react-resizable-panels"
@@ -26,6 +26,8 @@ function App() {
 			checkpointStore,
 		}
 	}, [])
+
+	useAppStateStorage()
 
 	const [tabIndex, setTabIndex] = useState(1)
 
@@ -72,7 +74,7 @@ function App() {
 		<div className="flex w-screen h-screen">
 			<SnackbarRenderer />
 
-			<PanelGroup direction="horizontal">
+			<PanelGroup direction="horizontal" autoSaveId="main-panel-group">
 				{leftSideBarExpanded && (
 					<>
 						<Panel id="checkpoints" order={1}>

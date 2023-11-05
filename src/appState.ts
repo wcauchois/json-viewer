@@ -2,6 +2,7 @@ import { create } from "zustand"
 import { Result } from "./utils"
 import { ASTNode, flattenAST, jsonToAST } from "./jsonAst"
 import { Set } from "immutable"
+import { useEffect } from "react"
 
 export interface AppState {
 	text: string
@@ -87,3 +88,37 @@ export const useAppState = create<AppState>(set => ({
 		})
 	},
 }))
+
+const LOCAL_STORAGE_KEY = "appState"
+
+interface LocalStorageValue {
+	text: string
+	leftSidebarExpanded: boolean
+}
+
+export function useAppStateStorage() {
+	const setText = useAppState(state => state.setText)
+	const setLeftSidebarExpanded = useAppState(
+		state => state.setLeftSidebarExpanded
+	)
+
+	useEffect(() => {
+		const storageValue = window.localStorage.getItem(LOCAL_STORAGE_KEY)
+		if (storageValue) {
+			const storageJsonValue: LocalStorageValue = JSON.parse(storageValue)
+			setText(storageJsonValue.text)
+			setLeftSidebarExpanded(storageJsonValue.leftSidebarExpanded)
+		}
+
+		return useAppState.subscribe(state => {
+			const storageJsonValue: LocalStorageValue = {
+				text: state.text,
+				leftSidebarExpanded: state.leftSidebarExpanded,
+			}
+			window.localStorage.setItem(
+				LOCAL_STORAGE_KEY,
+				JSON.stringify(storageJsonValue)
+			)
+		})
+	}, [setLeftSidebarExpanded, setText])
+}
