@@ -47,13 +47,13 @@ export function CheckpointPanel() {
 				<div>Checkpoints</div>
 				<div className="flex gap-2 items-center">
 					<IconUpload
+						className="cursor-pointer"
 						onClick={async () => {
 							await checkpointStore.upsertCheckpoint(
 								useAppState.getState().text
 							)
 						}}
 					/>
-					<IconDownload />
 				</div>
 			</div>
 			<CheckpointList />

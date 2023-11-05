@@ -16,6 +16,8 @@ export interface AppState {
 		Error
 	>
 	setNodeExpanded: (node: ASTNode, expanded: boolean) => void
+	leftSidebarExpanded: boolean
+	setLeftSidebarExpanded(expanded: boolean): void
 }
 
 /**
@@ -33,13 +35,15 @@ const deepJsonParse = (input: string) =>
 		return value
 	})
 
+const defaultParseResult: AppState["parseResult"] = {
+	type: "failure",
+	error: new Error("No input"),
+}
+
 export const useAppState = create<AppState>(set => ({
 	text: "",
 	expandedNodes: Set(),
-	parseResult: {
-		type: "failure",
-		error: new Error("No input"),
-	},
+	parseResult: defaultParseResult,
 	setNodeExpanded: (node, expanded) => {
 		set(state => ({
 			expandedNodes: expanded
@@ -74,6 +78,12 @@ export const useAppState = create<AppState>(set => ({
 			text: newText,
 			parseResult: parseResult,
 			expandedNodes,
+		})
+	},
+	leftSidebarExpanded: false,
+	setLeftSidebarExpanded(expanded) {
+		set({
+			leftSidebarExpanded: expanded,
 		})
 	},
 }))
