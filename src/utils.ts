@@ -39,3 +39,10 @@ export function intersperseArray<Value, IntersperseValue>(
 	})
 	return newArray
 }
+
+// https://stackoverflow.com/a/40031979
+export function buf2hex(buffer: ArrayBuffer) {
+	return [...new Uint8Array(buffer)]
+		.map(x => x.toString(16).padStart(2, "0"))
+		.join("")
+}

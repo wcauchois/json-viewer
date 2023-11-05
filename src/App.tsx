@@ -8,12 +8,15 @@ import { useEventListener } from "usehooks-ts"
 import { showSnackbar } from "./snackbar"
 import { Panel, PanelGroup } from "react-resizable-panels"
 import { ResizeHandle } from "./reactUtils"
+import { CheckpointPanel } from "./CheckpointPanel"
+import { checkpointStore } from "./CheckpointStore"
 
 function App() {
 	useEffect(() => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		;(window as any).__console = {
 			useAppState,
+			checkpointStore,
 		}
 	}, [])
 
@@ -44,7 +47,7 @@ function App() {
 
 			<PanelGroup direction="horizontal">
 				<Panel>
-					<div>Hello, world</div>
+					<CheckpointPanel />
 				</Panel>
 				<ResizeHandle direction="horizontal" />
 				<Panel>
