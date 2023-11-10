@@ -3,7 +3,7 @@ import {
 	checkpointStore,
 	useAllCheckpoints,
 } from "./CheckpointStore"
-import { useAppState } from "./appState"
+import { useAppState } from "./state/app"
 import { IconUpload } from "./icons"
 
 function CheckpointItem(props: { checkpoint: CheckpointModel }) {

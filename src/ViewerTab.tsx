@@ -1,5 +1,5 @@
 import clsx from "clsx"
-import { AppState, useAppState } from "./appState"
+import { AppState, useAppState } from "./state/app"
 import {
 	ASTNode,
 	ASTNodeWithValue,
@@ -25,7 +25,7 @@ import {
 } from "react"
 import React from "react"
 import { Modal } from "./system/Modal"
-import { showSnackbar } from "./snackbar"
+import { showSnackbar } from "./state/snackbar"
 import { useEventListener } from "usehooks-ts"
 
 const connectorStrokeColor = "rgb(156 163 175)"

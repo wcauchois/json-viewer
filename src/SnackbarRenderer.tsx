@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion"
 import { ReactNode } from "react"
-import { useSnackbar } from "./snackbar"
+import { useSnackbar } from "./state/snackbar"
 
 function Snackbar(props: { children: ReactNode }) {
 	const { children } = props

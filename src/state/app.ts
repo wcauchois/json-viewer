@@ -1,6 +1,6 @@
 import { create } from "zustand"
-import { Result } from "./utils"
-import { ASTNode, flattenAST, jsonToAST } from "./jsonAst"
+import { Result } from "../utils"
+import { ASTNode, flattenAST, jsonToAST } from "../jsonAst"
 import { Set } from "immutable"
 import { useEffect } from "react"
 
