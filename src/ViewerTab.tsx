@@ -14,9 +14,15 @@ import {
 	IconPlusSquare,
 	IconSquare,
 } from "./icons"
-import { isDefined, unreachable } from "./utils"
+import { isDefined, keyMap, keyMatch, unreachable } from "./utils"
 import _ from "lodash"
-import { useEffect, useImperativeHandle, useRef, useState } from "react"
+import {
+	useCallback,
+	useEffect,
+	useImperativeHandle,
+	useRef,
+	useState,
+} from "react"
 import React from "react"
 import { Modal } from "./system/Modal"
 import { showSnackbar } from "./snackbar"
@@ -148,13 +154,14 @@ function DetailModal(props: {
 	return (
 		<Modal
 			onClose={onClose}
-			onKeyDown={e => {
-				if (e.key === "Enter") {
-					onClose()
-				} else if (e.key === "c") {
-					navigator.clipboard.writeText(node.value)
-					showSnackbar("Copied field value to clipboard!")
-				}
+			onKeyDown={async e => {
+				await keyMap(e, {
+					Enter: () => onClose(),
+					c: () => {
+						navigator.clipboard.writeText(node.value)
+						showSnackbar("Copied field value to clipboard!")
+					},
+				})
 			}}
 			className="min-w-[min(600px,100vw-40px)] max-w-[calc(100vw-40px)] max-h-[calc(100vh-40px)]"
 		>
@@ -233,6 +240,42 @@ const NodeRenderer = React.forwardRef(
 
 		const expandable = isDefined(resolvedChildren)
 
+		const handleKeyDown = useCallback(
+			async (e: React.KeyboardEvent) => {
+				if (document.activeElement === containerRef.current) {
+					await keyMap(e, {
+						["ArrowRight,l"]: () => {
+							if (expandable && expanded) {
+								firstChildRef.current?.focus()
+							} else {
+								setExpanded(true)
+							}
+						},
+						["ArrowLeft,h"]: () => {
+							if (!expandable || !expanded) {
+								collapseAndFocusParent()
+							} else {
+								setExpanded(false)
+							}
+						},
+						["Enter"]: () => {
+							if (isOverflowing && node.type === "string") {
+								setDetailModalOpen(true)
+							}
+						},
+					})
+				}
+			},
+			[
+				collapseAndFocusParent,
+				expandable,
+				expanded,
+				isOverflowing,
+				node.type,
+				setExpanded,
+			]
+		)
+
 		return (
 			<>
 				<div
@@ -242,27 +285,7 @@ const NodeRenderer = React.forwardRef(
 						FocusableNodeClass
 					)}
 					tabIndex={0}
-					onKeyDown={e => {
-						if (document.activeElement === containerRef.current) {
-							if (e.key === "ArrowRight" || e.key === "l") {
-								if (expandable && expanded) {
-									firstChildRef.current?.focus()
-								} else {
-									setExpanded(true)
-								}
-							} else if (e.key === "ArrowLeft" || e.key === "h") {
-								if (!expandable || !expanded) {
-									collapseAndFocusParent()
-								} else {
-									setExpanded(false)
-								}
-							} else if (e.key === "Enter") {
-								if (isOverflowing && node.type === "string") {
-									setDetailModalOpen(true)
-								}
-							}
-						}
-					}}
+					onKeyDown={handleKeyDown}
 				>
 					{_.range(0, depth).map(i => (
 						<div
@@ -380,9 +403,9 @@ function ViewerTabSuccessfulParse(props: {
 				}
 
 				let moveDirection: "previous" | "next" | undefined
-				if (e.key === "ArrowUp" || e.key === "k") {
+				if (keyMatch(e, "ArrowUp,k")) {
 					moveDirection = "previous"
-				} else if (e.key === "ArrowDown" || e.key === "j") {
+				} else if (keyMatch(e, "ArrowDown,j")) {
 					moveDirection = "next"
 				}
 

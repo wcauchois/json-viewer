@@ -12,6 +12,7 @@ import { checkpointStore } from "./CheckpointStore"
 import clsx from "clsx"
 import React from "react"
 import { IconSidebarCollapse, IconSidebarExpand } from "./icons"
+import { keyMap } from "./utils"
 
 interface TabDefinition {
 	name: string
@@ -55,18 +56,19 @@ function App() {
 
 	useEventListener("keydown", async e => {
 		if (e.target === document.body) {
-			if (e.key === "v") {
-				setTabIndex(0)
-			} else if (e.key === "t") {
-				setTabIndex(1)
-			} else if (e.key === "p") {
-				const clipboardText = await navigator.clipboard?.readText()
-				setText(clipboardText ?? "")
-				showSnackbar("Pasted from clipboard.")
-			} else if (e.key === "c") {
-				navigator.clipboard?.writeText(text)
-				showSnackbar("Copied to clipboard!")
-			}
+			await keyMap(e, {
+				v: () => setTabIndex(0),
+				t: () => setTabIndex(1),
+				p: async () => {
+					const clipboardText = await navigator.clipboard?.readText()
+					setText(clipboardText ?? "")
+					showSnackbar("Pasted from clipboard.")
+				},
+				c: () => {
+					navigator.clipboard?.writeText(text)
+					showSnackbar("Copied to clipboard!")
+				},
+			})
 		}
 	})
 

@@ -46,3 +46,78 @@ export function buf2hex(buffer: ArrayBuffer) {
 		.map(x => x.toString(16).padStart(2, "0"))
 		.join("")
 }
+
+const modifierKeyToAlias: { [K in React.ModifierKey]: string | true } = {
+	Alt: "alt",
+	AltGraph: true,
+	CapsLock: true,
+	Control: "ctrl",
+	Fn: true,
+	FnLock: true,
+	Hyper: true,
+	Meta: "cmd",
+	NumLock: true,
+	ScrollLock: true,
+	Shift: "shift",
+	Super: true,
+	Symbol: true,
+	SymbolLock: true,
+}
+
+const aliasToModifierKey = Object.fromEntries(
+	Object.entries(modifierKeyToAlias).flatMap(([k, v]) =>
+		typeof v === "string" ? [[v, k]] : []
+	)
+)
+
+const ALL_MODIFIER_KEYS = Object.keys(modifierKeyToAlias) as React.ModifierKey[]
+
+export function keyMatch(
+	event: React.KeyboardEvent | KeyboardEvent,
+	keyDesc: string
+) {
+	const keyOptions = keyDesc.split(",").map(s => s.trim())
+
+	for (const keyOption of keyOptions) {
+		const requiredModifiers: React.ModifierKey[] = []
+		const parts = keyOption.split("+")
+		let key: string | undefined
+
+		for (const part of parts) {
+			const modifierKey = aliasToModifierKey[part]
+			if (modifierKey) {
+				requiredModifiers.push(modifierKey as React.ModifierKey)
+			} else {
+				key = part
+			}
+		}
+
+		if (!key) {
+			throw new Error(`Invalid key description: ${key}`)
+		}
+
+		if (
+			event.key === key &&
+			ALL_MODIFIER_KEYS.every(
+				modifierKey =>
+					event.getModifierState(modifierKey) ===
+					requiredModifiers.includes(modifierKey)
+			)
+		) {
+			return true
+		}
+	}
+
+	return false
+}
+
+export async function keyMap(
+	event: React.KeyboardEvent | KeyboardEvent,
+	map: Record<string, () => void | Promise<void>>
+) {
+	for (const [keyDesc, action] of Object.entries(map)) {
+		if (keyMatch(event, keyDesc)) {
+			await action()
+		}
+	}
+}

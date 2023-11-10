@@ -4,6 +4,7 @@ import { useRef } from "react"
 import { showSnackbar } from "./snackbar"
 import { Button } from "./system/Button"
 import { useEventListener } from "usehooks-ts"
+import { keyMap } from "./utils"
 
 interface ToolbarItem {
 	name: string
@@ -36,12 +37,14 @@ export function TextTab(props: { className?: string }) {
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-	useEventListener("keydown", e => {
+	useEventListener("keydown", async e => {
 		if (e.target === document.body) {
-			if (e.key === "Enter") {
-				e.preventDefault()
-				textareaRef.current?.focus()
-			}
+			await keyMap(e, {
+				Enter: () => {
+					e.preventDefault()
+					textareaRef.current?.focus()
+				},
+			})
 		}
 	})
 
