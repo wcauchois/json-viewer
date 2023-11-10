@@ -27,6 +27,7 @@ import React from "react"
 import { Modal } from "./system/Modal"
 import { showSnackbar } from "./state/snackbar"
 import { useEventListener } from "usehooks-ts"
+import { openContextMenu } from "./state/contextMenu"
 
 const connectorStrokeColor = "rgb(156 163 175)"
 
@@ -242,23 +243,31 @@ const NodeRenderer = React.forwardRef(
 
 		const expandable = isDefined(resolvedChildren)
 
+		const doExpand = useCallback(() => {
+			if (expandable && expanded) {
+				firstChildRef.current?.focus()
+			} else {
+				setExpanded(true)
+			}
+		}, [expandable, expanded, setExpanded])
+
+		const doCollapse = useCallback(() => {
+			if (!expandable || !expanded) {
+				collapseAndFocusParent()
+			} else {
+				setExpanded(false)
+			}
+		}, [collapseAndFocusParent, expandable, expanded, setExpanded])
+
 		const handleKeyDown = useCallback(
 			async (e: React.KeyboardEvent) => {
 				if (document.activeElement === containerRef.current) {
 					await keyMap(e, {
 						["ArrowRight,l"]: () => {
-							if (expandable && expanded) {
-								firstChildRef.current?.focus()
-							} else {
-								setExpanded(true)
-							}
+							doExpand()
 						},
 						["ArrowLeft,h"]: () => {
-							if (!expandable || !expanded) {
-								collapseAndFocusParent()
-							} else {
-								setExpanded(false)
-							}
+							doCollapse()
 						},
 						["Enter"]: () => {
 							if (isOverflowing && node.type === "string") {
@@ -268,15 +277,27 @@ const NodeRenderer = React.forwardRef(
 					})
 				}
 			},
-			[
-				collapseAndFocusParent,
-				expandable,
-				expanded,
-				isOverflowing,
-				node.type,
-				setExpanded,
-			]
+			[doCollapse, doExpand, isOverflowing, node.type]
 		)
+
+		const handleContextMenu = useCallback((e: React.MouseEvent) => {
+			e.preventDefault()
+			openContextMenu({
+				position: [e.clientX, e.clientY],
+				itemGroups: [
+					[
+						{
+							name: "Expand",
+							action: () => doExpand(),
+						},
+						{
+							name: "Collapse",
+							action: () => doCollapse(),
+						},
+					],
+				],
+			})
+		}, [])
 
 		return (
 			<>
@@ -288,6 +309,7 @@ const NodeRenderer = React.forwardRef(
 					)}
 					tabIndex={0}
 					onKeyDown={handleKeyDown}
+					onContextMenu={handleContextMenu}
 				>
 					{_.range(0, depth).map(i => (
 						<div

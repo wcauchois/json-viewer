@@ -13,6 +13,7 @@ import clsx from "clsx"
 import React from "react"
 import { IconSidebarCollapse, IconSidebarExpand } from "./icons"
 import { keyMap } from "./utils"
+import { ContextMenuRenderer } from "./ContextMenuRenderer"
 
 interface TabDefinition {
 	name: string
@@ -75,6 +76,7 @@ function App() {
 	return (
 		<div className="flex w-screen h-screen">
 			<SnackbarRenderer />
+			<ContextMenuRenderer />
 
 			<PanelGroup direction="horizontal" autoSaveId="main-panel-group">
 				{leftSideBarExpanded && (
