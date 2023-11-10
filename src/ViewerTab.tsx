@@ -187,8 +187,10 @@ const NodeRenderer = React.forwardRef(
 		const setNodeExpanded = useAppState(state => state.setNodeExpanded)
 		const expandedNodes = useAppState(state => state.expandedNodes)
 
-		const setExpanded = (newExpanded: boolean) =>
-			setNodeExpanded(node, newExpanded)
+		const setExpanded = useCallback(
+			(newExpanded: boolean) => setNodeExpanded(node, newExpanded),
+			[node, setNodeExpanded]
+		)
 		const expanded = expandedNodes.has(node)
 
 		const containerRef = useRef<HTMLDivElement>(null)
