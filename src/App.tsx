@@ -10,7 +10,6 @@ import { ResizeHandle } from "./reactUtils"
 import { CheckpointPanel } from "./CheckpointPanel"
 import { checkpointStore } from "./CheckpointStore"
 import clsx from "clsx"
-import React from "react"
 import { IconSidebarCollapse, IconSidebarExpand } from "./icons"
 import { keyMap } from "./utils"
 import { ContextMenuRenderer } from "./ContextMenuRenderer"
@@ -119,15 +118,7 @@ function App() {
 							</div>
 						</div>
 						<div className="grow overflow-y-scroll">
-							{tabs.map((tab, i) => (
-								<React.Fragment key={i}>
-									{tab.render({
-										className: clsx({
-											hidden: i !== tabIndex,
-										}),
-									})}
-								</React.Fragment>
-							))}
+							{tabs[tabIndex].render({})}
 						</div>
 					</div>
 				</Panel>

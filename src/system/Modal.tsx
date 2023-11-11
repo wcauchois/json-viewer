@@ -44,7 +44,7 @@ export function Modal(props: {
 							}}
 						/>
 					</div>
-					<div className="p-2">{children}</div>
+					<div className="p-2 overflow-y-scroll">{children}</div>
 				</div>
 			</div>
 			<div className="fixed inset-0 bg-black opacity-5 z-10" />
