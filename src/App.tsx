@@ -118,7 +118,7 @@ function App() {
 								))}
 							</div>
 						</div>
-						<div className="grow">
+						<div className="grow overflow-y-scroll">
 							{tabs.map((tab, i) => (
 								<React.Fragment key={i}>
 									{tab.render({
