@@ -1,3 +1,4 @@
+import { useEventListener } from "usehooks-ts"
 import { ContextMenuState, useContextMenu } from "./state/contextMenu"
 
 function OpenContextMenu(props: {
@@ -7,15 +8,22 @@ function OpenContextMenu(props: {
 		state: { itemGroups, position },
 	} = props
 
+	useEventListener("keydown", async e => {
+		if (e.key === "Escape") {
+			useContextMenu.setState({ open: false })
+		}
+	})
+
 	return (
 		<div
 			className="fixed inset-0 z-20"
 			onClick={() => {
 				useContextMenu.setState({ open: false })
 			}}
+			onContextMenu={e => e.preventDefault()}
 		>
 			<div
-				className="absolute border text-sm bg-white"
+				className="absolute border text-sm bg-white select-none"
 				style={{
 					left: position[0],
 					top: position[1],

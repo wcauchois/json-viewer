@@ -1,6 +1,6 @@
 import { SnackbarRenderer } from "./SnackbarRenderer"
 import { TextTab } from "./TextTab"
-import { ViewerTab } from "./ViewerTab"
+import { ViewerTab } from "./ViewerTab/ViewerTab"
 import { ReactNode, useCallback, useEffect, useState } from "react"
 import { useAppState, useAppStateStorage } from "./state/app"
 import { useEventListener } from "usehooks-ts"
