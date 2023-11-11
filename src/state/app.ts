@@ -17,6 +17,7 @@ export interface AppState {
 		Error
 	>
 	setNodeExpanded: (node: ASTNode, expanded: boolean) => void
+	setNodesExpanded: (nodes: ASTNode[], expanded: boolean) => void
 	leftSidebarExpanded: boolean
 	setLeftSidebarExpanded(expanded: boolean): void
 	tabIndex: number
@@ -43,15 +44,18 @@ const defaultParseResult: AppState["parseResult"] = {
 	error: new Error("No input"),
 }
 
-export const useAppState = create<AppState>(set => ({
+export const useAppState = create<AppState>((set, get) => ({
 	text: "",
 	expandedNodes: Set(),
 	parseResult: defaultParseResult,
 	setNodeExpanded: (node, expanded) => {
+		get().setNodesExpanded([node], expanded)
+	},
+	setNodesExpanded: (nodes, expanded) => {
 		set(state => ({
 			expandedNodes: expanded
-				? state.expandedNodes.add(node)
-				: state.expandedNodes.filter(candidate => candidate !== node),
+				? state.expandedNodes.union(nodes)
+				: state.expandedNodes.subtract(nodes),
 		}))
 	},
 	setText: newText => {

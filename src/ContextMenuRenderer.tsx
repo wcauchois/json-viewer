@@ -23,7 +23,7 @@ function OpenContextMenu(props: {
 			onContextMenu={e => e.preventDefault()}
 		>
 			<div
-				className="absolute border text-sm bg-white select-none"
+				className="absolute border text-sm bg-white select-none shadow-md"
 				style={{
 					left: position[0],
 					top: position[1],
@@ -34,7 +34,7 @@ function OpenContextMenu(props: {
 						{group.map((item, j) => (
 							<div
 								key={j}
-								className="flex cursor-pointer hover:bg-blue-300 px-1"
+								className="flex cursor-pointer hover:bg-blue-300 pr-1 pl-3"
 								onClick={() => {
 									item.action()
 								}}

@@ -3,6 +3,7 @@ import { useAppState } from "../state/app"
 import {
 	ASTNode,
 	ASTNodeWithValue,
+	flattenAST,
 	isNodeWithChildren,
 	isNodeWithValue,
 } from "../jsonAst"
@@ -20,6 +21,7 @@ import {
 	useCallback,
 	useEffect,
 	useImperativeHandle,
+	useMemo,
 	useRef,
 	useState,
 } from "react"
@@ -187,6 +189,7 @@ export const NodeRenderer = React.forwardRef(function NodeRendererComponent(
 	} = props
 
 	const setNodeExpanded = useAppState(state => state.setNodeExpanded)
+	const setNodesExpanded = useAppState(state => state.setNodesExpanded)
 	const expandedNodes = useAppState(state => state.expandedNodes)
 
 	const setExpanded = useCallback(
@@ -226,21 +229,22 @@ export const NodeRenderer = React.forwardRef(function NodeRendererComponent(
 		containerRef.current?.focus() // Return focus
 	}
 
-	let resolvedChildren:
+	const resolvedChildren = useMemo(():
 		| Array<[childName: string, childNode: ASTNode]>
-		| undefined
-	if (isNodeWithChildren(node)) {
-		if (node.type === "array") {
-			resolvedChildren = node.children.map((childNode, index) => [
-				index.toString(),
-				childNode,
-			])
-		} else if (node.type === "object") {
-			resolvedChildren = node.children
-		} else {
-			unreachable(node)
+		| undefined => {
+		if (isNodeWithChildren(node)) {
+			if (node.type === "array") {
+				return node.children.map((childNode, index) => [
+					index.toString(),
+					childNode,
+				])
+			} else if (node.type === "object") {
+				return node.children
+			} else {
+				unreachable(node)
+			}
 		}
-	}
+	}, [node])
 
 	const expandable = isDefined(resolvedChildren)
 
@@ -259,6 +263,13 @@ export const NodeRenderer = React.forwardRef(function NodeRendererComponent(
 			setExpanded(false)
 		}
 	}, [collapseAndFocusParent, expandable, expanded, setExpanded])
+
+	const setSelfAndAllChildrenExpanded = useCallback(
+		(expanded: boolean) => {
+			setNodesExpanded(flattenAST(node), expanded)
+		},
+		[node, setNodesExpanded]
+	)
 
 	const handleKeyDown = useCallback(
 		async (e: React.KeyboardEvent) => {
@@ -290,11 +301,21 @@ export const NodeRenderer = React.forwardRef(function NodeRendererComponent(
 					[
 						{
 							name: "Expand",
-							action: () => doExpand(),
+							action: doExpand,
 						},
 						{
+							name: "Expand all",
+							action: () => setSelfAndAllChildrenExpanded(true),
+						},
+					],
+					[
+						{
 							name: "Collapse",
-							action: () => doCollapse(),
+							action: doCollapse,
+						},
+						{
+							name: "Collapse all",
+							action: () => setSelfAndAllChildrenExpanded(false),
 						},
 					],
 				],
