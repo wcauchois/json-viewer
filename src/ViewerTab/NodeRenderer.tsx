@@ -174,250 +174,256 @@ function DetailModal(props: {
 	)
 }
 
-export const NodeRenderer = React.forwardRef(function NodeRendererComponent(
-	props: NodeRendererProps,
-	ref: React.Ref<NodeRendererHandle>
-) {
-	const {
-		node,
-		name,
-		depth = 0,
-		depthLines = [],
-		isLast,
-		isRoot,
-		collapseAndFocusParent,
-	} = props
+export const NodeRenderer = React.memo(
+	React.forwardRef(function NodeRendererComponent(
+		props: NodeRendererProps,
+		ref: React.Ref<NodeRendererHandle>
+	) {
+		const {
+			node,
+			name,
+			depth = 0,
+			depthLines = [],
+			isLast,
+			isRoot,
+			collapseAndFocusParent,
+		} = props
 
-	const setNodeExpanded = useAppState(state => state.setNodeExpanded)
-	const setNodesExpanded = useAppState(state => state.setNodesExpanded)
-	const expandedNodes = useAppState(state => state.expandedNodes)
+		const setNodeExpanded = useAppState(state => state.setNodeExpanded)
+		const setNodesExpanded = useAppState(state => state.setNodesExpanded)
+		const expanded = useAppState(state => state.expandedNodes.has(node))
 
-	const setExpanded = useCallback(
-		(newExpanded: boolean) => setNodeExpanded(node, newExpanded),
-		[node, setNodeExpanded]
-	)
-	const expanded = expandedNodes.has(node)
+		const setExpanded = useCallback(
+			(newExpanded: boolean) => setNodeExpanded(node, newExpanded),
+			[node, setNodeExpanded]
+		)
 
-	const containerRef = useRef<HTMLDivElement>(null)
-	const nameAndValueRef = useRef<HTMLDivElement>(null)
+		const containerRef = useRef<HTMLDivElement>(null)
+		const nameAndValueRef = useRef<HTMLDivElement>(null)
 
-	const [isOverflowing, setIsOverflowing] = useState(false)
-	useEffect(() => {
-		const el = nameAndValueRef.current
-		if (!el) {
-			return
+		const [isOverflowing, setIsOverflowing] = useState(false)
+		useEffect(() => {
+			const el = nameAndValueRef.current
+			if (!el) {
+				return
+			}
+			// https://stackoverflow.com/a/10017343
+			setIsOverflowing(el.offsetWidth < el.scrollWidth)
+		}, [nameAndValueRef])
+
+		useImperativeHandle(
+			ref,
+			() => ({
+				focus() {
+					containerRef.current?.focus()
+				},
+			}),
+			[]
+		)
+
+		const firstChildRef = useRef<NodeRendererHandle>(null)
+
+		const [detailModalOpen, setDetailModalOpen] = useState(false)
+		const closeDetailModal = () => {
+			setDetailModalOpen(false)
+			containerRef.current?.focus() // Return focus
 		}
-		// https://stackoverflow.com/a/10017343
-		setIsOverflowing(el.offsetWidth < el.scrollWidth)
-	}, [nameAndValueRef])
 
-	useImperativeHandle(
-		ref,
-		() => ({
-			focus() {
-				containerRef.current?.focus()
-			},
-		}),
-		[]
-	)
+		const resolvedChildren = useMemo(():
+			| Array<[childName: string, childNode: ASTNode]>
+			| undefined => {
+			if (isNodeWithChildren(node)) {
+				if (node.type === "array") {
+					return node.children.map((childNode, index) => [
+						index.toString(),
+						childNode,
+					])
+				} else if (node.type === "object") {
+					return node.children
+				} else {
+					unreachable(node)
+				}
+			}
+		}, [node])
 
-	const firstChildRef = useRef<NodeRendererHandle>(null)
+		const expandable = isDefined(resolvedChildren)
 
-	const [detailModalOpen, setDetailModalOpen] = useState(false)
-	const closeDetailModal = () => {
-		setDetailModalOpen(false)
-		containerRef.current?.focus() // Return focus
-	}
-
-	const resolvedChildren = useMemo(():
-		| Array<[childName: string, childNode: ASTNode]>
-		| undefined => {
-		if (isNodeWithChildren(node)) {
-			if (node.type === "array") {
-				return node.children.map((childNode, index) => [
-					index.toString(),
-					childNode,
-				])
-			} else if (node.type === "object") {
-				return node.children
+		const doExpand = useCallback(() => {
+			if (expandable && expanded) {
+				firstChildRef.current?.focus()
 			} else {
-				unreachable(node)
+				setExpanded(true)
 			}
-		}
-	}, [node])
+		}, [expandable, expanded, setExpanded])
 
-	const expandable = isDefined(resolvedChildren)
+		const doCollapse = useCallback(() => {
+			if (!expandable || !expanded) {
+				collapseAndFocusParent()
+			} else {
+				setExpanded(false)
+			}
+		}, [collapseAndFocusParent, expandable, expanded, setExpanded])
 
-	const doExpand = useCallback(() => {
-		if (expandable && expanded) {
-			firstChildRef.current?.focus()
-		} else {
-			setExpanded(true)
-		}
-	}, [expandable, expanded, setExpanded])
+		const setSelfAndAllChildrenExpanded = useCallback(
+			(expanded: boolean) => {
+				setNodesExpanded(flattenAST(node), expanded)
+			},
+			[node, setNodesExpanded]
+		)
 
-	const doCollapse = useCallback(() => {
-		if (!expandable || !expanded) {
-			collapseAndFocusParent()
-		} else {
-			setExpanded(false)
-		}
-	}, [collapseAndFocusParent, expandable, expanded, setExpanded])
+		const handleKeyDown = useCallback(
+			async (e: React.KeyboardEvent) => {
+				if (document.activeElement === containerRef.current) {
+					await keyMap(e, {
+						["ArrowRight,l"]: () => {
+							doExpand()
+						},
+						["ArrowLeft,h"]: () => {
+							doCollapse()
+						},
+						["Enter"]: () => {
+							if (isOverflowing && node.type === "string") {
+								setDetailModalOpen(true)
+							}
+						},
+					})
+				}
+			},
+			[doCollapse, doExpand, isOverflowing, node.type]
+		)
 
-	const setSelfAndAllChildrenExpanded = useCallback(
-		(expanded: boolean) => {
-			setNodesExpanded(flattenAST(node), expanded)
-		},
-		[node, setNodesExpanded]
-	)
-
-	const handleKeyDown = useCallback(
-		async (e: React.KeyboardEvent) => {
-			if (document.activeElement === containerRef.current) {
-				await keyMap(e, {
-					["ArrowRight,l"]: () => {
-						doExpand()
-					},
-					["ArrowLeft,h"]: () => {
-						doCollapse()
-					},
-					["Enter"]: () => {
-						if (isOverflowing && node.type === "string") {
-							setDetailModalOpen(true)
-						}
-					},
+		const handleContextMenu = useCallback(
+			(e: React.MouseEvent) => {
+				e.preventDefault()
+				openContextMenu({
+					position: [e.clientX, e.clientY],
+					itemGroups: [
+						[
+							{
+								name: "Expand",
+								action: doExpand,
+							},
+							{
+								name: "Expand all",
+								action: () => setSelfAndAllChildrenExpanded(true),
+							},
+						],
+						[
+							{
+								name: "Collapse",
+								action: doCollapse,
+							},
+							{
+								name: "Collapse all",
+								action: () => setSelfAndAllChildrenExpanded(false),
+							},
+						],
+					],
 				})
-			}
-		},
-		[doCollapse, doExpand, isOverflowing, node.type]
-	)
+			},
+			[doCollapse, doExpand, setSelfAndAllChildrenExpanded]
+		)
 
-	const handleContextMenu = useCallback(
-		(e: React.MouseEvent) => {
-			e.preventDefault()
-			openContextMenu({
-				position: [e.clientX, e.clientY],
-				itemGroups: [
-					[
-						{
-							name: "Expand",
-							action: doExpand,
-						},
-						{
-							name: "Expand all",
-							action: () => setSelfAndAllChildrenExpanded(true),
-						},
-					],
-					[
-						{
-							name: "Collapse",
-							action: doCollapse,
-						},
-						{
-							name: "Collapse all",
-							action: () => setSelfAndAllChildrenExpanded(false),
-						},
-					],
-				],
-			})
-		},
-		[doCollapse, doExpand]
-	)
+		const childCollapseAndFocusParent = useCallback(() => {
+			setExpanded(false)
+			containerRef.current?.focus()
+		}, [setExpanded])
 
-	return (
-		<>
-			<div
-				ref={containerRef}
-				className={clsx(
-					"flex items-center gap-1 focus:bg-blue-100 outline-none relative group",
-					FocusableNodeClass
-				)}
-				tabIndex={0}
-				onKeyDown={handleKeyDown}
-				onContextMenu={handleContextMenu}
-			>
-				{_.range(0, depth).map(i => (
-					<div
-						key={i}
-						className="self-stretch shrink-0"
-						style={{ width: "1em" }}
-					>
-						{depthLines.includes(i) && <ConnectorIcon type={"vertical"} />}
-					</div>
-				))}
-				<div className="self-stretch shrink-0">
-					{isDefined(resolvedChildren) && resolvedChildren.length > 0 ? (
-						<ExpandIcon
-							onClick={() => {
-								setExpanded(!expanded)
-							}}
-							onMouseDown={e => {
-								// Prevent capturing focus
-								e.preventDefault()
-							}}
-							expanded={expanded}
-							connectors={[
-								"top",
-								...(isLast || isRoot ? [] : ["bottom" as const]),
-							]}
-						/>
-					) : (
-						<ConnectorIcon type={isLast ? "corner" : "tri"} />
-					)}
-				</div>
-				<TypeIconForNode node={node} className="shrink-0" />
+		return (
+			<>
 				<div
-					className="whitespace-nowrap text-ellipsis overflow-hidden"
-					ref={nameAndValueRef}
-				>
-					{name ?? "JSON"}
-					{isNodeWithValue(node) && (
-						<>
-							{" : "}
-							<NodeValueRenderer node={node} />
-						</>
+					ref={containerRef}
+					className={clsx(
+						"flex items-center gap-1 focus:bg-blue-100 outline-none relative group",
+						FocusableNodeClass
 					)}
-				</div>
-				{isOverflowing && node.type === "string" && (
-					<>
-						<div className="absolute right-0 top-0 bottom-0 flex items-center group-hover:visible invisible pr-1 pl-6 bg-gradient-to-r from-transparent via-white to-white">
-							<IconMagnifyingGlass
-								className="cursor-pointer fill-gray-500 hover:fill-black"
+					tabIndex={0}
+					onKeyDown={handleKeyDown}
+					onContextMenu={handleContextMenu}
+				>
+					{_.range(0, depth).map(i => (
+						<div
+							key={i}
+							className="self-stretch shrink-0"
+							style={{ width: "1em" }}
+						>
+							{depthLines.includes(i) && <ConnectorIcon type={"vertical"} />}
+						</div>
+					))}
+					<div className="self-stretch shrink-0">
+						{isDefined(resolvedChildren) && resolvedChildren.length > 0 ? (
+							<ExpandIcon
 								onClick={() => {
-									setDetailModalOpen(true)
+									setExpanded(!expanded)
 								}}
 								onMouseDown={e => {
 									// Prevent capturing focus
 									e.preventDefault()
 								}}
+								expanded={expanded}
+								connectors={[
+									"top",
+									...(isLast || isRoot ? [] : ["bottom" as const]),
+								]}
 							/>
-						</div>
-						{detailModalOpen && (
-							<DetailModal onClose={() => closeDetailModal()} node={node} />
+						) : (
+							<ConnectorIcon type={isLast ? "corner" : "tri"} />
 						)}
-					</>
-				)}
-			</div>
-			{expanded &&
-				(resolvedChildren ?? []).map(([childName, childNode], i) => {
-					const childIsLast =
-						isDefined(resolvedChildren) && i === resolvedChildren.length - 1
-					return (
-						<NodeRenderer
-							ref={i === 0 ? firstChildRef : undefined}
-							key={childName}
-							node={childNode}
-							name={childName}
-							depth={depth + 1}
-							isLast={childIsLast}
-							depthLines={[...depthLines, ...(isLast || isRoot ? [] : [depth])]}
-							collapseAndFocusParent={() => {
-								setExpanded(false)
-								containerRef.current?.focus()
-							}}
-						/>
-					)
-				})}
-		</>
-	)
-})
+					</div>
+					<TypeIconForNode node={node} className="shrink-0" />
+					<div
+						className="whitespace-nowrap text-ellipsis overflow-hidden"
+						ref={nameAndValueRef}
+					>
+						{name ?? "JSON"}
+						{isNodeWithValue(node) && (
+							<>
+								{" : "}
+								<NodeValueRenderer node={node} />
+							</>
+						)}
+					</div>
+					{isOverflowing && node.type === "string" && (
+						<>
+							<div className="absolute right-0 top-0 bottom-0 flex items-center group-hover:visible invisible pr-1 pl-6 bg-gradient-to-r from-transparent via-white to-white">
+								<IconMagnifyingGlass
+									className="cursor-pointer fill-gray-500 hover:fill-black"
+									onClick={() => {
+										setDetailModalOpen(true)
+									}}
+									onMouseDown={e => {
+										// Prevent capturing focus
+										e.preventDefault()
+									}}
+								/>
+							</div>
+							{detailModalOpen && (
+								<DetailModal onClose={() => closeDetailModal()} node={node} />
+							)}
+						</>
+					)}
+				</div>
+				{expanded &&
+					(resolvedChildren ?? []).map(([childName, childNode], i) => {
+						const childIsLast =
+							isDefined(resolvedChildren) && i === resolvedChildren.length - 1
+						return (
+							<NodeRenderer
+								ref={i === 0 ? firstChildRef : undefined}
+								key={childName}
+								node={childNode}
+								name={childName}
+								depth={depth + 1}
+								isLast={childIsLast}
+								depthLines={[
+									...depthLines,
+									...(isLast || isRoot ? [] : [depth]),
+								]}
+								collapseAndFocusParent={childCollapseAndFocusParent}
+							/>
+						)
+					})}
+			</>
+		)
+	})
+)

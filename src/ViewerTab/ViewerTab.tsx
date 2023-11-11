@@ -9,6 +9,8 @@ import {
 	NodeRendererHandle,
 } from "./NodeRenderer"
 
+const emptyFunction = () => {}
+
 function ViewerTabSuccessfulParse(props: {
 	parseResult: Extract<AppState["parseResult"], { type: "success" }>
 }) {
@@ -68,7 +70,7 @@ function ViewerTabSuccessfulParse(props: {
 				ref={rootNodeRendererRef}
 				node={parseResult.value.ast}
 				isRoot={true}
-				collapseAndFocusParent={() => {}}
+				collapseAndFocusParent={emptyFunction}
 			/>
 		</div>
 	)
