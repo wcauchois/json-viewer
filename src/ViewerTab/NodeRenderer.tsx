@@ -204,11 +204,24 @@ export const NodeRenderer = React.memo(
 		const [isOverflowing, setIsOverflowing] = useState(false)
 		useEffect(() => {
 			const el = nameAndValueRef.current
+
 			if (!el) {
 				return
 			}
-			// https://stackoverflow.com/a/10017343
-			setIsOverflowing(el.offsetWidth < el.scrollWidth)
+
+			const definedEl = el
+			function updateIsOverflowing() {
+				// https://stackoverflow.com/a/10017343
+				setIsOverflowing(definedEl.offsetWidth < definedEl.scrollWidth)
+			}
+
+			const observer = new ResizeObserver(() => {
+				updateIsOverflowing()
+			})
+			observer.observe(el)
+			updateIsOverflowing()
+
+			return () => observer.disconnect()
 		}, [nameAndValueRef])
 
 		useImperativeHandle(
