@@ -1,7 +1,7 @@
 import { SnackbarRenderer } from "./SnackbarRenderer"
 import { TextTab } from "./TextTab"
 import { ViewerTab } from "./ViewerTab/ViewerTab"
-import { ReactNode, useCallback, useEffect, useState } from "react"
+import { ReactNode, useCallback, useEffect } from "react"
 import { useAppState, useAppStateStorage } from "./state/app"
 import { useEventListener } from "usehooks-ts"
 import { showSnackbar } from "./state/snackbar"
@@ -30,7 +30,8 @@ function App() {
 
 	useAppStateStorage()
 
-	const [tabIndex, setTabIndex] = useState(1)
+	const tabIndex = useAppState(state => state.tabIndex)
+	const setTabIndex = useAppState(state => state.setTabIndex)
 
 	const tabs: TabDefinition[] = [
 		{

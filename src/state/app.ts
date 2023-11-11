@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { Result } from "../utils"
+import { Result, isDefined } from "../utils"
 import { ASTNode, flattenAST, jsonToAST } from "../jsonAst"
 import { Set } from "immutable"
 import { useEffect } from "react"
@@ -19,6 +19,8 @@ export interface AppState {
 	setNodeExpanded: (node: ASTNode, expanded: boolean) => void
 	leftSidebarExpanded: boolean
 	setLeftSidebarExpanded(expanded: boolean): void
+	tabIndex: number
+	setTabIndex: (index: number) => void
 }
 
 /**
@@ -87,6 +89,8 @@ export const useAppState = create<AppState>(set => ({
 			leftSidebarExpanded: expanded,
 		})
 	},
+	tabIndex: 1,
+	setTabIndex: index => set({ tabIndex: index }),
 }))
 
 const LOCAL_STORAGE_KEY = "appState"
@@ -94,6 +98,7 @@ const LOCAL_STORAGE_KEY = "appState"
 interface LocalStorageValue {
 	text: string
 	leftSidebarExpanded: boolean
+	tabIndex: number | undefined
 }
 
 export function useAppStateStorage() {
@@ -101,6 +106,7 @@ export function useAppStateStorage() {
 	const setLeftSidebarExpanded = useAppState(
 		state => state.setLeftSidebarExpanded
 	)
+	const setTabIndex = useAppState(state => state.setTabIndex)
 
 	useEffect(() => {
 		const storageValue = window.localStorage.getItem(LOCAL_STORAGE_KEY)
@@ -108,12 +114,16 @@ export function useAppStateStorage() {
 			const storageJsonValue: LocalStorageValue = JSON.parse(storageValue)
 			setText(storageJsonValue.text)
 			setLeftSidebarExpanded(storageJsonValue.leftSidebarExpanded)
+			if (isDefined(storageJsonValue.tabIndex)) {
+				setTabIndex(storageJsonValue.tabIndex)
+			}
 		}
 
 		return useAppState.subscribe(state => {
 			const storageJsonValue: LocalStorageValue = {
 				text: state.text,
 				leftSidebarExpanded: state.leftSidebarExpanded,
+				tabIndex: state.tabIndex,
 			}
 			window.localStorage.setItem(
 				LOCAL_STORAGE_KEY,
