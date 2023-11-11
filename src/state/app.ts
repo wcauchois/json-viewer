@@ -130,5 +130,5 @@ export function useAppStateStorage() {
 				JSON.stringify(storageJsonValue)
 			)
 		})
-	}, [setLeftSidebarExpanded, setText])
+	}, [setLeftSidebarExpanded, setTabIndex, setText])
 }
