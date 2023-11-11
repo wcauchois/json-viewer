@@ -281,6 +281,12 @@ export const NodeRenderer = React.memo(
 						["ArrowLeft,h"]: () => {
 							doCollapse()
 						},
+						["shift+H"]: () => {
+							setSelfAndAllChildrenExpanded(false)
+						},
+						["shift+L"]: () => {
+							setSelfAndAllChildrenExpanded(true)
+						},
 						["Enter"]: () => {
 							if (isOverflowing && node.type === "string") {
 								setDetailModalOpen(true)
@@ -289,7 +295,13 @@ export const NodeRenderer = React.memo(
 					})
 				}
 			},
-			[doCollapse, doExpand, isOverflowing, node.type]
+			[
+				doCollapse,
+				doExpand,
+				isOverflowing,
+				node.type,
+				setSelfAndAllChildrenExpanded,
+			]
 		)
 
 		const handleContextMenu = useCallback(
