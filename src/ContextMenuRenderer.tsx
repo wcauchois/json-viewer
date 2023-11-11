@@ -23,14 +23,17 @@ function OpenContextMenu(props: {
 			onContextMenu={e => e.preventDefault()}
 		>
 			<div
-				className="absolute border text-sm bg-white select-none shadow-md"
+				className="absolute border text-sm bg-white select-none shadow-md flex flex-col divide-y"
 				style={{
 					left: position[0],
 					top: position[1],
 				}}
 			>
 				{itemGroups.map((group, i) => (
-					<div key={i} className="flex flex-col">
+					<div
+						key={i}
+						className="flex flex-col pb-0.5 pt-0.5 first:pt-0 last:pb-0"
+					>
 						{group.map((item, j) => (
 							<div
 								key={j}
