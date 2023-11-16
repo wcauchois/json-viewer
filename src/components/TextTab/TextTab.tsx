@@ -2,32 +2,10 @@ import clsx from "clsx"
 import { useAppState } from "../../state/app"
 import { useRef } from "react"
 import { showSnackbar } from "../../state/snackbar"
-import { Button } from "../designSystem/Button"
 import { useEventListener } from "usehooks-ts"
 import { keyMap } from "../../lib/utils"
-
-interface ToolbarItem {
-	name: string
-	action: () => void
-}
-
-function Toolbar(props: { itemGroups: ToolbarItem[][] }) {
-	const { itemGroups } = props
-
-	return (
-		<div className="flex px-2 py-1 border-b divide-x">
-			{itemGroups.map((group, i) => (
-				<div className="flex gap-2 px-2 first:pl-0" key={i}>
-					{group.map((item, j) => (
-						<Button key={j} onClick={item.action}>
-							{item.name}
-						</Button>
-					))}
-				</div>
-			))}
-		</div>
-	)
-}
+import { copyToClipboard, pasteFromClipboard } from "../../lib/appActions"
+import { Toolbar } from "../designSystem/Toolbar"
 
 export function TextTab(props: { className?: string }) {
 	const { className } = props
@@ -55,17 +33,11 @@ export function TextTab(props: { className?: string }) {
 					[
 						{
 							name: "Paste",
-							action: async () => {
-								const clipboardText = await navigator.clipboard?.readText()
-								setText(clipboardText ?? "")
-							},
+							action: () => pasteFromClipboard(),
 						},
 						{
 							name: "Copy",
-							action: async () => {
-								navigator.clipboard?.writeText(text)
-								showSnackbar("Copied to clipboard!")
-							},
+							action: () => copyToClipboard(),
 						},
 					],
 					[

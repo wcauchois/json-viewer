@@ -4,7 +4,6 @@ import { ViewerTab } from "./components/ViewerTab/ViewerTab"
 import { ReactNode, useCallback, useEffect } from "react"
 import { useAppState, useAppStateStorage } from "./state/app"
 import { useEventListener } from "usehooks-ts"
-import { showSnackbar } from "./state/snackbar"
 import { Panel, PanelGroup } from "react-resizable-panels"
 import { ResizeHandle } from "./lib/reactUtils"
 import { CheckpointPanel } from "./components/CheckpointPanel"
@@ -13,6 +12,7 @@ import clsx from "clsx"
 import { IconSidebarCollapse, IconSidebarExpand } from "./lib/icons"
 import { keyMap } from "./lib/utils"
 import { ContextMenuRenderer } from "./components/ContextMenuRenderer"
+import { copyToClipboard, pasteFromClipboard } from "./lib/appActions"
 
 interface TabDefinition {
 	name: string
@@ -44,9 +44,6 @@ function App() {
 		},
 	]
 
-	const setText = useAppState(state => state.setText)
-	const text = useAppState(state => state.text)
-
 	const leftSideBarExpanded = useAppState(state => state.leftSidebarExpanded)
 	const setLeftSideBarExpanded = useAppState(
 		state => state.setLeftSidebarExpanded
@@ -60,15 +57,8 @@ function App() {
 			await keyMap(e, {
 				v: () => setTabIndex(0),
 				t: () => setTabIndex(1),
-				p: async () => {
-					const clipboardText = await navigator.clipboard?.readText()
-					setText(clipboardText ?? "")
-					showSnackbar("Pasted from clipboard.")
-				},
-				c: () => {
-					navigator.clipboard?.writeText(text)
-					showSnackbar("Copied to clipboard!")
-				},
+				p: () => pasteFromClipboard(),
+				c: () => copyToClipboard(),
 			})
 		}
 	})
