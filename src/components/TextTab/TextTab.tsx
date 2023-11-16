@@ -1,10 +1,10 @@
 import clsx from "clsx"
-import { useAppState } from "./state/app"
+import { useAppState } from "../../state/app"
 import { useRef } from "react"
-import { showSnackbar } from "./state/snackbar"
-import { Button } from "./system/Button"
+import { showSnackbar } from "../../state/snackbar"
+import { Button } from "../designSystem/Button"
 import { useEventListener } from "usehooks-ts"
-import { keyMap } from "./utils"
+import { keyMap } from "../../lib/utils"
 
 interface ToolbarItem {
 	name: string

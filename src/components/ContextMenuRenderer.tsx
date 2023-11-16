@@ -1,5 +1,5 @@
 import { useEventListener } from "usehooks-ts"
-import { ContextMenuState, useContextMenu } from "./state/contextMenu"
+import { ContextMenuState, useContextMenu } from "../state/contextMenu"
 
 function OpenContextMenu(props: {
 	state: Extract<ContextMenuState, { open: true }>

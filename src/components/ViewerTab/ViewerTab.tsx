@@ -1,6 +1,6 @@
 import clsx from "clsx"
-import { AppState, useAppState } from "../state/app"
-import { isDefined, keyMatch } from "../utils"
+import { AppState, useAppState } from "../../state/app"
+import { isDefined, keyMatch } from "../../lib/utils"
 import { useCallback, useRef, useState } from "react"
 import { useEventListener } from "usehooks-ts"
 import {

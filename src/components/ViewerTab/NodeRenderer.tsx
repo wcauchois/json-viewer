@@ -1,12 +1,12 @@
 import clsx from "clsx"
-import { useAppState } from "../state/app"
+import { useAppState } from "../../state/app"
 import {
 	ASTNode,
 	ASTNodeWithValue,
 	flattenAST,
 	isNodeWithChildren,
 	isNodeWithValue,
-} from "../jsonAst"
+} from "../../lib/jsonAst"
 import {
 	IconBraces,
 	IconBracketsLine,
@@ -14,8 +14,8 @@ import {
 	IconMinusSquare,
 	IconPlusSquare,
 	IconSquare,
-} from "../icons"
-import { isDefined, keyMap, unreachable } from "../utils"
+} from "../../lib/icons"
+import { isDefined, keyMap, unreachable } from "../../lib/utils"
 import _ from "lodash"
 import {
 	useCallback,
@@ -26,9 +26,9 @@ import {
 	useState,
 } from "react"
 import React from "react"
-import { Modal } from "../system/Modal"
-import { showSnackbar } from "../state/snackbar"
-import { openContextMenu } from "../state/contextMenu"
+import { Modal } from "../designSystem/Modal"
+import { showSnackbar } from "../../state/snackbar"
+import { openContextMenu } from "../../state/contextMenu"
 
 const connectorStrokeColor = "rgb(156 163 175)"
 

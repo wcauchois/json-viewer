@@ -1,5 +1,5 @@
 import { ReactNode } from "react"
-import { IconCloseCircle } from "../icons"
+import { IconCloseCircle } from "../../lib/icons"
 import clsx from "clsx"
 
 export function Modal(props: {

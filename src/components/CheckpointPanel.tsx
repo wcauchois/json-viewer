@@ -2,9 +2,9 @@ import {
 	CheckpointModel,
 	checkpointStore,
 	useAllCheckpoints,
-} from "./CheckpointStore"
-import { useAppState } from "./state/app"
-import { IconUpload } from "./icons"
+} from "../lib/CheckpointStore"
+import { useAppState } from "../state/app"
+import { IconUpload } from "../lib/icons"
 
 function CheckpointItem(props: { checkpoint: CheckpointModel }) {
 	const { checkpoint } = props
