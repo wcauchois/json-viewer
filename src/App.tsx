@@ -14,6 +14,7 @@ import { keyMap } from "./lib/utils"
 import { ContextMenuRenderer } from "./components/ContextMenuRenderer"
 import { copyToClipboard, pasteFromClipboard } from "./lib/appActions"
 import { callWorkerApi, worker } from "./worker/workerClient"
+import { database } from "./lib/database"
 
 interface TabDefinition {
 	name: string
@@ -29,6 +30,10 @@ function App() {
 			worker,
 			callWorkerApi,
 		}
+	}, [])
+
+	useEffect(() => {
+		database.ensureInitialized()
 	}, [])
 
 	useAppStateStorage()

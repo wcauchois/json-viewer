@@ -14,7 +14,7 @@ const apis: {
 } = {
 	async init() {
 		if (db) {
-			throw new Error("Tried to initialize database twice")
+			return {}
 		}
 
 		const sqlite3 = await sqlite3InitModule({
