@@ -1,4 +1,5 @@
 import { callWorkerApi } from "../worker/workerClient"
+import type { BindingSpec } from "@sqlite.org/sqlite-wasm"
 import { z } from "zod"
 
 interface MigrationInterface {
@@ -66,6 +67,31 @@ class Database {
 			this._initPromise = this.initializeDatabase()
 		}
 		return this._initPromise
+	}
+
+	async exec(sql: string, bind?: BindingSpec) {
+		await this.ensureInitialized()
+		await callWorkerApi("exec", {
+			sql,
+			bind,
+			getData: false,
+		})
+	}
+
+	async fetchRows<T extends z.ZodTypeAny>(args: {
+		sql: string
+		bind?: BindingSpec
+		rowSchema: T
+	}): Promise<Array<z.infer<T>>> {
+		const { sql, bind, rowSchema } = args
+
+		const result = await callWorkerApi("exec", {
+			sql,
+			bind,
+			getData: true,
+		})
+
+		return (result.data ?? []).map(row => rowSchema.parse(row))
 	}
 }
 
