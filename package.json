@@ -11,6 +11,7 @@
 		"format": "prettier --write \"*.{js,ts}\" tsconfig.json \"src/**/*.{css,tsx,ts}\""
 	},
 	"dependencies": {
+		"@sqlite.org/sqlite-wasm": "^3.44.0-build2",
 		"clsx": "^2.0.0",
 		"eventemitter3": "^5.0.1",
 		"framer-motion": "^10.16.4",

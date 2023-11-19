@@ -13,6 +13,7 @@ import { IconSidebarCollapse, IconSidebarExpand } from "./lib/icons"
 import { keyMap } from "./lib/utils"
 import { ContextMenuRenderer } from "./components/ContextMenuRenderer"
 import { copyToClipboard, pasteFromClipboard } from "./lib/appActions"
+import { callWorkerApi, worker } from "./worker/workerClient"
 
 interface TabDefinition {
 	name: string
@@ -25,6 +26,8 @@ function App() {
 		;(window as any).__console = {
 			useAppState,
 			checkpointStore,
+			worker,
+			callWorkerApi,
 		}
 	}, [])
 

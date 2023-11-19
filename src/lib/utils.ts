@@ -121,3 +121,5 @@ export async function keyMap(
 		}
 	}
 }
+
+export type EmptyObject = Record<string, never>
