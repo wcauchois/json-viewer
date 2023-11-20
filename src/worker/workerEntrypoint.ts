@@ -77,7 +77,3 @@ addEventListener("message", async (event: MessageEvent<MessageToWorker>) => {
 
 	self.postMessage(responseMessage)
 })
-
-async function init() {}
-
-init().catch(err => error(err))
