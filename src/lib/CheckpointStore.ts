@@ -4,11 +4,18 @@ import { z } from "zod"
 import { useEffect, useState } from "react"
 import { database } from "./database"
 
+const checkpointSourceSchema = z.union([
+	z.literal("paste"),
+	z.literal("manual"),
+])
+type CheckpointSource = z.infer<typeof checkpointSourceSchema>
+
 export interface CheckpointModel {
 	date: Date
 	hash: string
 	name: string | undefined
 	content: string
+	source: CheckpointSource
 }
 
 async function getHashForContent(content: string) {
@@ -27,17 +34,20 @@ async function getHashForContent(content: string) {
 }
 
 export class CheckpointStore extends EventEmitter<"change"> {
-	async upsertCheckpoint(content: string) {
+	async upsertCheckpoint(args: { content: string; source: CheckpointSource }) {
+		const { content, source } = args
+
 		// https://www.sqlite.org/lang_upsert.html
 		await database.exec(
 			`
-				insert into checkpoint(date, hash, content) values ($date, $hash, $content)
-				on conflict do update set date = $date, content = $content
+				insert into checkpoint(date, hash, content, source) values ($date, $hash, $content, $source)
+				on conflict do update set date = $date, content = $content, source = $source
 			`,
 			{
 				$date: Math.round(Date.now() / 1000),
 				$hash: await getHashForContent(content),
 				$content: content,
+				$source: source,
 			}
 		)
 		this.emit("change")
@@ -56,12 +66,13 @@ export class CheckpointStore extends EventEmitter<"change"> {
 
 	async getAllCheckpoints() {
 		const rows = await database.fetchRows({
-			sql: `select hash, date, name, content from checkpoint order by date desc`,
+			sql: `select hash, date, name, content, source from checkpoint order by date desc`,
 			rowSchema: z.object({
 				hash: z.string(),
 				date: z.number(),
 				name: z.string().nullable(),
 				content: z.string(),
+				source: checkpointSourceSchema,
 			}),
 		})
 		return rows.map(
@@ -70,6 +81,7 @@ export class CheckpointStore extends EventEmitter<"change"> {
 				content: row.content,
 				hash: row.hash,
 				name: row.name ?? undefined,
+				source: row.source,
 			})
 		)
 	}

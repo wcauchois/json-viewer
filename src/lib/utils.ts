@@ -123,3 +123,12 @@ export async function keyMap(
 }
 
 export type EmptyObject = Record<string, never>
+
+export function isValidJson(input: string) {
+	try {
+		JSON.parse(input)
+		return true
+	} catch {
+		return false
+	}
+}

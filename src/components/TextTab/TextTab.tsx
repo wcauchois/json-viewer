@@ -3,9 +3,10 @@ import { useAppState } from "../../state/app"
 import { useRef } from "react"
 import { showSnackbar } from "../../state/snackbar"
 import { useEventListener } from "usehooks-ts"
-import { keyMap } from "../../lib/utils"
+import { isValidJson, keyMap } from "../../lib/utils"
 import { copyToClipboard, pasteFromClipboard } from "../../lib/appActions"
 import { Toolbar } from "../designSystem/Toolbar"
+import { checkpointStore } from "../../lib/CheckpointStore"
 
 export function TextTab(props: { className?: string }) {
 	const { className } = props
@@ -84,6 +85,15 @@ export function TextTab(props: { className?: string }) {
 				className="p-1 text-xs font-mono resize-none grow"
 				value={text}
 				onChange={e => setText(e.currentTarget.value)}
+				onPaste={e => {
+					const value = e.currentTarget.value
+					if (isValidJson(value)) {
+						checkpointStore.upsertCheckpoint({
+							content: value,
+							source: "paste",
+						})
+					}
+				}}
 				onKeyDown={e => {
 					if (e.key === "Escape") {
 						textareaRef.current?.blur()

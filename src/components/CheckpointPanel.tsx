@@ -49,9 +49,10 @@ export function CheckpointPanel() {
 					<IconUpload
 						className="cursor-pointer"
 						onClick={async () => {
-							await checkpointStore.upsertCheckpoint(
-								useAppState.getState().text
-							)
+							await checkpointStore.upsertCheckpoint({
+								content: useAppState.getState().text,
+								source: "manual",
+							})
 						}}
 					/>
 				</div>

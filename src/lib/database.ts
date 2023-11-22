@@ -13,13 +13,15 @@ const migrations: Record<
 	create_test_table: async database => {
 		await database.exec(`create table test(text text)`)
 	},
+
 	create_checkpoint_table: async database => {
 		await database.exec(`
 			create table checkpoint(
 				hash text not null primary key,
 				date integer not null,
 				name text,
-				content text not null
+				content text not null,
+				source text not null
 			)
 		`)
 	},
