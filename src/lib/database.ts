@@ -13,6 +13,16 @@ const migrations: Record<
 	create_test_table: async database => {
 		await database.exec(`create table test(text text)`)
 	},
+	create_checkpoint_table: async database => {
+		await database.exec(`
+			create table checkpoint(
+				hash text not null primary key,
+				date integer not null,
+				name text,
+				content text not null
+			)
+		`)
+	},
 }
 
 class Database {
@@ -80,17 +90,16 @@ class Database {
 
 	async fetchRows<T extends z.ZodTypeAny>(args: {
 		sql: string
-		bind?: BindingSpec
+		bind?: BindingSpec | undefined
 		rowSchema: T
 	}): Promise<Array<z.infer<T>>> {
 		const { sql, bind, rowSchema } = args
-
+		await this.ensureInitialized()
 		const result = await callWorkerApi("exec", {
 			sql,
 			bind,
 			getData: true,
 		})
-
 		return (result.data ?? []).map(row => rowSchema.parse(row))
 	}
 }

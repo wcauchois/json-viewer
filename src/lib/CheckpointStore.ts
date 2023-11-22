@@ -1,7 +1,8 @@
-import { openDB, DBSchema, IDBPDatabase } from "idb/with-async-ittr"
 import { buf2hex } from "./utils"
 import { EventEmitter } from "eventemitter3"
+import { z } from "zod"
 import { useEffect, useState } from "react"
+import { database } from "./database"
 
 export interface CheckpointModel {
 	date: Date
@@ -10,72 +11,67 @@ export interface CheckpointModel {
 	content: string
 }
 
-interface CheckpointSchema extends DBSchema {
-	checkpoints: {
-		key: string
-		value: CheckpointModel
-		indexes: {
-			date: Date
-		}
+async function getHashForContent(content: string) {
+	let normalizedContent = content
+	try {
+		normalizedContent = JSON.stringify(JSON.parse(content))
+	} catch (err) {
+		// No op
 	}
+	return buf2hex(
+		await window.crypto.subtle.digest(
+			"SHA-1",
+			new TextEncoder().encode(normalizedContent)
+		)
+	)
 }
 
 export class CheckpointStore extends EventEmitter<"change"> {
-	private _db: Promise<IDBPDatabase<CheckpointSchema>> | undefined
-
-	get db() {
-		if (!this._db) {
-			this._db = openDB<CheckpointSchema>("checkpoints", 1, {
-				upgrade(db) {
-					const store = db.createObjectStore("checkpoints", {
-						keyPath: "hash",
-					})
-					store.createIndex("date", "date")
-				},
-			})
-		}
-		return this._db
-	}
-
 	async upsertCheckpoint(content: string) {
-		const model: CheckpointModel = {
-			date: new Date(),
-			hash: buf2hex(
-				await window.crypto.subtle.digest(
-					"SHA-1",
-					new TextEncoder().encode(content)
-				)
-			),
-			content,
-			name: undefined,
-		}
-		const db = await this.db
-		const store = db.transaction("checkpoints", "readwrite").store
-		await store.put(model)
+		// https://www.sqlite.org/lang_upsert.html
+		await database.exec(
+			`
+				insert into checkpoint(date, hash, content) values ($date, $hash, $content)
+				on conflict do update set date = $date, content = $content
+			`,
+			{
+				$date: Math.round(Date.now() / 1000),
+				$hash: await getHashForContent(content),
+				$content: content,
+			}
+		)
 		this.emit("change")
 	}
 
 	async renameCheckpoint(hash: string, name: string | undefined) {
-		const db = await this.db
-		const store = db.transaction("checkpoints", "readwrite").store
-		const model = await store.get(hash)
-		if (!model) {
-			throw new Error(`Checkpoint with hash ${hash} not found`)
-		}
-		model.name = name
-		await store.put(model)
+		await database.exec(
+			`update checkpoint set name = $name where hash = $hash`,
+			{
+				$name: name ?? null,
+				$hash: hash,
+			}
+		)
 		this.emit("change")
 	}
 
 	async getAllCheckpoints() {
-		const db = await this.db
-		const store = db.transaction("checkpoints", "readonly").store
-		const index = store.index("date")
-		const result: CheckpointModel[] = []
-		for await (const model of index.iterate(undefined, "prev")) {
-			result.push(model.value)
-		}
-		return result
+		const rows = await database.fetchRows({
+			sql: `select hash, date, name, content from checkpoint order by date desc`,
+			rowSchema: z.object({
+				hash: z.string(),
+				date: z.number(),
+				name: z.string().nullable(),
+				content: z.string(),
+			}),
+		})
+		return rows.map(
+			(row): CheckpointModel => ({
+				date: new Date(row.date * 1000),
+				content: row.content,
+				hash: row.hash,
+				name: row.name ?? undefined,
+			})
+		)
 	}
 }
 
@@ -93,7 +89,7 @@ export function useAllCheckpoints() {
 		return () => {
 			checkpointStore.off("change", refresh)
 		}
-	})
+	}, [])
 
 	return result
 }
