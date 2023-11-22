@@ -86,7 +86,7 @@ export function TextTab(props: { className?: string }) {
 				value={text}
 				onChange={e => setText(e.currentTarget.value)}
 				onPaste={e => {
-					const value = e.currentTarget.value
+					const value = e.clipboardData.getData("text")
 					if (isValidJson(value)) {
 						checkpointStore.upsertCheckpoint({
 							content: value,

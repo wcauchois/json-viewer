@@ -33,6 +33,10 @@ async function getHashForContent(content: string) {
 	)
 }
 
+export interface CheckpointFilter {
+	sourceFilter?: CheckpointSource
+}
+
 export class CheckpointStore extends EventEmitter<"change"> {
 	async upsertCheckpoint(args: { content: string; source: CheckpointSource }) {
 		const { content, source } = args
@@ -64,9 +68,21 @@ export class CheckpointStore extends EventEmitter<"change"> {
 		this.emit("change")
 	}
 
-	async getAllCheckpoints() {
+	async getCheckpoints(filter: CheckpointFilter = {}) {
 		const rows = await database.fetchRows({
-			sql: `select hash, date, name, content, source from checkpoint order by date desc`,
+			sql: `
+				select hash, date, name, content, source from checkpoint
+				${filter.sourceFilter ? "where" : ""}
+				${filter.sourceFilter ? "source = $sourceFilter" : ""}
+				order by date desc
+			`,
+			bind: {
+				...(filter.sourceFilter
+					? {
+							$sourceFilter: filter.sourceFilter,
+					  }
+					: {}),
+			},
 			rowSchema: z.object({
 				hash: z.string(),
 				date: z.number(),
@@ -89,19 +105,19 @@ export class CheckpointStore extends EventEmitter<"change"> {
 
 export const checkpointStore = new CheckpointStore()
 
-export function useAllCheckpoints() {
+export function useCheckpoints(filter: CheckpointFilter = {}) {
 	const [result, setResult] = useState<CheckpointModel[]>([])
 
 	useEffect(() => {
 		async function refresh() {
-			setResult(await checkpointStore.getAllCheckpoints())
+			setResult(await checkpointStore.getCheckpoints(filter))
 		}
 		refresh()
 		checkpointStore.on("change", refresh)
 		return () => {
 			checkpointStore.off("change", refresh)
 		}
-	}, [])
+	}, [filter])
 
 	return result
 }
