@@ -96,7 +96,6 @@ class Database {
 		rowSchema: T
 	}): Promise<Array<z.infer<T>>> {
 		const { sql, bind, rowSchema } = args
-		console.log("fetch sql", sql)
 		await this.ensureInitialized()
 		const result = await callWorkerApi("exec", {
 			sql,
