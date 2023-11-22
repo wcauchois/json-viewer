@@ -77,7 +77,14 @@ function CheckpointItem(props: { checkpoint: CheckpointModel }) {
 	)
 }
 
-type FilterType = "manual" | "paste" | "all"
+type DisplayFilter =
+	| {
+			type: "manual" | "paste" | "all"
+	  }
+	| {
+			type: "find"
+			query: string
+	  }
 
 function FilterPill(props: {
 	name: string
@@ -89,7 +96,7 @@ function FilterPill(props: {
 		<div
 			onClick={onClick}
 			className={clsx(
-				"cursor-pointer px-1 border rounded border-gray-500 select-none",
+				"cursor-pointer px-1 border rounded border-gray-500 select-none transition-all",
 				selected ? "bg-purple-300" : "hover:bg-purple-100"
 			)}
 		>
@@ -99,54 +106,92 @@ function FilterPill(props: {
 }
 
 function FilterPills(props: {
-	filterType: FilterType
-	setFilterType: (newFilterType: FilterType) => void
+	displayFilter: DisplayFilter
+	setDisplayFilter: (newDisplayFilter: DisplayFilter) => void
 }) {
-	const { filterType, setFilterType } = props
+	const { displayFilter, setDisplayFilter } = props
 
-	const filterPillToName: { [K in FilterType]: string } = {
+	const filterTypeToName: { [K in DisplayFilter["type"]]: string } = {
 		all: "All",
 		manual: "Manual",
 		paste: "Paste",
+		find: "Find",
 	}
 
 	return (
-		<div className="flex text-sm mx-2 space-x-2 mb-1">
-			{Object.entries(filterPillToName).map(([currentFilterType, name]) => (
-				<FilterPill
-					key={currentFilterType}
-					name={name}
-					selected={filterType === currentFilterType}
-					onClick={() => {
-						if (
-							filterType === currentFilterType &&
-							currentFilterType !== "all"
-						) {
-							// Clicking on a non-all pill again resets filters.
-							setFilterType("all")
-						} else {
-							setFilterType(currentFilterType as FilterType)
-						}
-					}}
-				/>
-			))}
+		<div className="flex flex-col">
+			<div className="flex text-sm mx-2 space-x-2 mb-1">
+				{Object.entries(filterTypeToName).map(([filterType_, name]) => {
+					const filterType = filterType_ as DisplayFilter["type"]
+					return (
+						<FilterPill
+							key={filterType}
+							name={name}
+							selected={displayFilter.type === filterType}
+							onClick={() => {
+								if (displayFilter.type === filterType && filterType !== "all") {
+									// Clicking on a non-all pill again resets filters.
+									setDisplayFilter({ type: "all" })
+								} else {
+									setDisplayFilter(
+										filterType === "find"
+											? {
+													type: "find",
+													query: "",
+											  }
+											: {
+													type: filterType,
+											  }
+									)
+								}
+							}}
+						/>
+					)
+				})}
+			</div>
+			{displayFilter.type === "find" ? (
+				<div className="flex mx-2 my-1">
+					<input
+						ref={el => el?.focus()}
+						className="grow rounded text-sm px-2 py-1 outline-gray-400 focus:outline-purple-500 outline outline-1"
+						placeholder="Enter a query"
+						type="text"
+						value={displayFilter.query}
+						onChange={e => {
+							setDisplayFilter({
+								type: "find",
+								query: e.currentTarget.value,
+							})
+						}}
+					/>
+				</div>
+			) : null}
 		</div>
 	)
 }
 
 function CheckpointList() {
-	const [filterType, setFilterType] = useState<FilterType>("all")
+	const [displayFilter, setDisplayFilter] = useState<DisplayFilter>({
+		type: "all",
+	})
 	const checkpointFilter = useMemo(
 		(): CheckpointFilter => ({
-			sourceFilter: filterType !== "all" ? filterType : undefined,
+			sourceFilter:
+				displayFilter.type === "manual" || displayFilter.type === "paste"
+					? displayFilter.type
+					: undefined,
+			query: displayFilter.type === "find" ? displayFilter.query : undefined,
 		}),
-		[filterType]
+		[displayFilter]
 	)
 	const checkpoints = useCheckpoints(checkpointFilter)
 
 	return (
 		<div className="flex flex-col">
-			<FilterPills filterType={filterType} setFilterType={setFilterType} />
+			<FilterPills
+				displayFilter={displayFilter}
+				setDisplayFilter={setDisplayFilter}
+			/>
 			{checkpoints.map(checkpoint => (
 				<CheckpointItem checkpoint={checkpoint} key={checkpoint.hash} />
 			))}

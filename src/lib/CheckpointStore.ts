@@ -35,6 +35,7 @@ async function getHashForContent(content: string) {
 
 export interface CheckpointFilter {
 	sourceFilter?: CheckpointSource
+	query?: string
 }
 
 export class CheckpointStore extends EventEmitter<"change"> {
@@ -72,14 +73,25 @@ export class CheckpointStore extends EventEmitter<"change"> {
 		const rows = await database.fetchRows({
 			sql: `
 				select hash, date, name, content, source from checkpoint
-				${filter.sourceFilter ? "where" : ""}
+				${filter.sourceFilter || filter.query ? "where" : ""}
 				${filter.sourceFilter ? "source = $sourceFilter" : ""}
+				${
+					filter.query
+						? (filter.sourceFilter ? "and " : "") +
+						  "upper(content) like '%' || upper($query) || '%'"
+						: ""
+				}
 				order by date desc
 			`,
 			bind: {
 				...(filter.sourceFilter
 					? {
 							$sourceFilter: filter.sourceFilter,
+					  }
+					: {}),
+				...(filter.query
+					? {
+							$query: filter.query,
 					  }
 					: {}),
 			},
