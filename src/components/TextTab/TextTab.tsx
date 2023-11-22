@@ -7,6 +7,7 @@ import { isValidJson, keyMap } from "../../lib/utils"
 import { copyToClipboard, pasteFromClipboard } from "../../lib/appActions"
 import { Toolbar } from "../designSystem/Toolbar"
 import { checkpointStore } from "../../lib/CheckpointStore"
+import { AboutModal, AboutModalHandle } from "../AboutModal"
 
 export function TextTab(props: { className?: string }) {
 	const { className } = props
@@ -15,6 +16,7 @@ export function TextTab(props: { className?: string }) {
 	const setText = useAppState(state => state.setText)
 
 	const textareaRef = useRef<HTMLTextAreaElement>(null)
+	const aboutModal = useRef<AboutModalHandle>(null)
 
 	useEventListener("keydown", async e => {
 		if (e.target === document.body) {
@@ -29,6 +31,7 @@ export function TextTab(props: { className?: string }) {
 
 	return (
 		<div className={clsx(className, "w-full h-full flex flex-col")}>
+			<AboutModal ref={aboutModal} />
 			<Toolbar
 				itemGroups={[
 					[
@@ -75,6 +78,10 @@ export function TextTab(props: { className?: string }) {
 							action: () => {
 								setText("")
 							},
+						},
+						{
+							name: "About",
+							action: () => aboutModal.current?.open(),
 						},
 					],
 				]}
