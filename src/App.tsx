@@ -9,16 +9,18 @@ import { ResizeHandle } from "./lib/reactUtils"
 import { CheckpointPanel } from "./components/CheckpointPanel"
 import { checkpointStore } from "./lib/CheckpointStore"
 import clsx from "clsx"
-import { IconSidebarCollapse, IconSidebarExpand } from "./lib/icons"
+import { IconHelp, IconSidebarCollapse, IconSidebarExpand } from "./lib/icons"
 import { keyMap } from "./lib/utils"
 import { ContextMenuRenderer } from "./components/ContextMenuRenderer"
 import {
 	copyToClipboard,
 	pasteFromClipboard,
+	selectLatestCheckpoint,
 	selectSiblingCheckpoint,
 } from "./lib/appActions"
 import { callWorkerApi, worker } from "./worker/workerClient"
 import { database } from "./lib/database"
+import { HelpPanel } from "./components/HelpPanel"
 
 interface TabDefinition {
 	name: string
@@ -64,6 +66,14 @@ function App() {
 		setLeftSideBarExpanded(!leftSideBarExpanded)
 	}, [leftSideBarExpanded, setLeftSideBarExpanded])
 
+	const rightSideBarExpanded = useAppState(state => state.rightSidebarExpanded)
+	const setRightSideBarExpanded = useAppState(
+		state => state.setRightSidebarExpanded
+	)
+	const toggleRightSidebar = useCallback(() => {
+		setRightSideBarExpanded(!rightSideBarExpanded)
+	}, [rightSideBarExpanded, setRightSideBarExpanded])
+
 	useEventListener("keydown", async e => {
 		if (e.target === document.body) {
 			await keyMap(e, {
@@ -74,6 +84,8 @@ function App() {
 				e: () => toggleLeftSidebar(),
 				b: () => selectSiblingCheckpoint("earlier"),
 				f: () => selectSiblingCheckpoint("later"),
+				h: () => toggleRightSidebar(),
+				"shift+F": () => selectLatestCheckpoint(),
 			})
 		}
 	})
@@ -92,11 +104,12 @@ function App() {
 						<ResizeHandle direction="horizontal" />
 					</>
 				)}
+
 				<Panel id="main" order={2}>
 					<div className={"flex flex-col w-full h-full"}>
-						<div className="flex border-b">
+						<div className="flex border-b justify-between">
 							<div className="flex border-r divide-x">
-								<div className="flex items-center px-2">
+								<IconWrap>
 									{leftSideBarExpanded ? (
 										<IconSidebarExpand
 											className="cursor-pointer"
@@ -108,7 +121,7 @@ function App() {
 											onClick={toggleLeftSidebar}
 										/>
 									)}
-								</div>
+								</IconWrap>
 								{tabs.map((tab, i) => (
 									<div
 										key={i}
@@ -122,15 +135,34 @@ function App() {
 									</div>
 								))}
 							</div>
+							<IconWrap>
+								<IconHelp
+									className="cursor-pointer"
+									onClick={toggleRightSidebar}
+								/>
+							</IconWrap>
 						</div>
 						<div className="grow overflow-y-scroll">
 							{tabs[tabIndex].render({})}
 						</div>
 					</div>
 				</Panel>
+
+				{rightSideBarExpanded && (
+					<>
+						<ResizeHandle direction="horizontal" />
+						<Panel id="help" order={2} style={{ overflowY: "scroll" }}>
+							<HelpPanel />
+						</Panel>
+					</>
+				)}
 			</PanelGroup>
 		</div>
 	)
+}
+
+function IconWrap(props: { children: ReactNode }) {
+	return <div className="flex items-center px-2">{props.children}</div>
 }
 
 export default App

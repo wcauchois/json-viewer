@@ -51,3 +51,10 @@ export async function selectSiblingCheckpoint(direction: "earlier" | "later") {
 
 	useAppState.getState().setText(siblingCheckpoint.content)
 }
+
+export async function selectLatestCheckpoint() {
+	const latestCheckpoint = await checkpointStore.getLatestCheckpoint()
+	if (latestCheckpoint) {
+		useAppState.getState().setText(latestCheckpoint.content)
+	}
+}

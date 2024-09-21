@@ -17,10 +17,13 @@ export interface AppState {
 	>
 	setNodeExpanded: (node: ASTNode, expanded: boolean) => void
 	setNodesExpanded: (nodes: ASTNode[], expanded: boolean) => void
-	leftSidebarExpanded: boolean
-	setLeftSidebarExpanded(expanded: boolean): void
 	tabIndex: number
 	setTabIndex: (index: number) => void
+
+	leftSidebarExpanded: boolean
+	setLeftSidebarExpanded(expanded: boolean): void
+	rightSidebarExpanded: boolean
+	setRightSidebarExpanded(expanded: boolean): void
 }
 
 /**
@@ -84,14 +87,21 @@ export const useAppState = create<AppState>((set, get) => ({
 			expandedNodes,
 		})
 	},
+	tabIndex: 1,
+	setTabIndex: index => set({ tabIndex: index }),
+
 	leftSidebarExpanded: false,
 	setLeftSidebarExpanded(expanded) {
 		set({
 			leftSidebarExpanded: expanded,
 		})
 	},
-	tabIndex: 1,
-	setTabIndex: index => set({ tabIndex: index }),
+	rightSidebarExpanded: false,
+	setRightSidebarExpanded(expanded) {
+		set({
+			rightSidebarExpanded: expanded,
+		})
+	},
 }))
 
 const LOCAL_STORAGE_KEY = "appState"

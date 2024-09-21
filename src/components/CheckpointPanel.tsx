@@ -213,7 +213,7 @@ export function CheckpointPanel() {
 	return (
 		<div className="flex flex-col">
 			<div className="flex justify-between mx-2 my-1">
-				<div>Checkpoints</div>
+				<div className="font-bold">Checkpoints</div>
 				<div className="flex gap-2 items-center">
 					<IconUpload
 						className="cursor-pointer"
