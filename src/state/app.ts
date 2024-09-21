@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import { Result, isDefined } from "../lib/utils"
-import { ASTNode, flattenAST, jsonToAST } from "../lib/jsonAst"
+import { ASTNode, jsonToAST } from "../lib/jsonAst"
 import { Set } from "immutable"
 import { useEffect } from "react"
 
@@ -12,7 +12,6 @@ export interface AppState {
 		{
 			object: Record<string, unknown>
 			ast: ASTNode
-			flatAST: ASTNode[]
 		},
 		Error
 	>
@@ -64,13 +63,11 @@ export const useAppState = create<AppState>((set, get) => ({
 		try {
 			const object = deepJsonParse(newText)
 			const ast = jsonToAST(object)
-			const flatAST = flattenAST(ast)
 			parseResult = {
 				type: "success",
 				value: {
 					object,
 					ast,
-					flatAST,
 				},
 			}
 			expandedNodes = Set([ast])
