@@ -136,19 +136,6 @@ export class CheckpointStore extends EventEmitter<"change"> {
 	}
 
 	async getSiblingCheckpoint(hash: string, mode: "earlier" | "later") {
-		console.log(
-			"exec:",
-			`
-				select ${CheckpointModel.COLUMNS.map(c => `current.${c}`).join(",")}
-				from checkpoint current
-				join (
-					select hash, ${mode === "earlier" ? "lag" : "lead"}(hash) over (order by date desc) as sibling_hash
-					from checkpoint
-				) sibling
-				on current.hash = sibling.sibling_hash
-				where sibling.hash = $hash
-			`
-		)
 		const rows = await database.fetchRows({
 			sql: `
 				select ${CheckpointModel.COLUMNS.map(c => `current.${c}`).join(",")}
