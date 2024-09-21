@@ -162,7 +162,7 @@ function DetailModal(props: {
 					Enter: () => onClose(),
 					c: () => {
 						navigator.clipboard.writeText(node.value)
-						showSnackbar("Copied field value to clipboard!")
+						showSnackbar("Value copied to clipboard.")
 					},
 				})
 			}}

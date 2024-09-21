@@ -3,12 +3,17 @@ import { showSnackbar } from "../state/snackbar"
 import { checkpointStore, getHashForContent } from "./CheckpointStore"
 import { flattenAST } from "./jsonAst"
 
+const MAX_LENGTH_FOR_AUTOEXPAND = 5000
+
 export async function pasteFromClipboard() {
 	const clipboardText = await navigator.clipboard?.readText()
 	useAppState.getState().setText(clipboardText ?? "")
 
 	const updatedAppState = useAppState.getState()
-	if (updatedAppState.parseResult.type === "success") {
+	if (
+		clipboardText.length < MAX_LENGTH_FOR_AUTOEXPAND &&
+		updatedAppState.parseResult.type === "success"
+	) {
 		updatedAppState.setNodesExpanded(
 			flattenAST(updatedAppState.parseResult.value.ast),
 			true

@@ -84,7 +84,6 @@ function App() {
 				e: () => toggleLeftSidebar(),
 				b: () => selectSiblingCheckpoint("earlier"),
 				f: () => selectSiblingCheckpoint("later"),
-				h: () => toggleRightSidebar(),
 				"shift+F": () => selectLatestCheckpoint(),
 			})
 		}

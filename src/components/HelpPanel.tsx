@@ -20,7 +20,6 @@ export function HelpPanel() {
 								["v", `Switch to ‘Viewer’ tab`],
 								["t", `Switch to ‘Text’ tab`],
 								["e", `Toggle checkpoints panel`],
-								["h", `Toggle help panel`],
 								["b", `Go back to previous checkpoint`],
 								["f", `Go forward to next checkpoint`],
 								[[SHIFT, "f"], `Go to latest checkpoint`],
@@ -37,6 +36,7 @@ export function HelpPanel() {
 								[[SHIFT, "l"], `Expand object (recursive)`],
 								[[SHIFT, "h"], `Collapse object (recursive)`],
 								[ENTER, `Show full value in modal (when truncated)`],
+								["e", `Toggle checkpoints panel`],
 							],
 						},
 					]}

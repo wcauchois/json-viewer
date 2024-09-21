@@ -95,6 +95,9 @@ function ViewerTabSuccessfulParse(props: {
 					) {
 						document.activeElement.blur()
 					}
+				} else if (e.key === "e") {
+					const appState = useAppState.getState()
+					appState.setLeftSidebarExpanded(!appState.leftSidebarExpanded)
 				}
 			}
 		},
