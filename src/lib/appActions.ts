@@ -1,6 +1,6 @@
 import { useAppState } from "../state/app"
 import { showSnackbar } from "../state/snackbar"
-import { checkpointStore } from "./CheckpointStore"
+import { checkpointStore, getHashForContent } from "./CheckpointStore"
 import { flattenAST } from "./jsonAst"
 
 export async function pasteFromClipboard() {
@@ -28,4 +28,26 @@ export async function copyToClipboard() {
 	const text = useAppState.getState().text
 	await navigator.clipboard?.writeText(text)
 	showSnackbar("Copied to clipboard!")
+}
+
+export async function selectSiblingCheckpoint(direction: "earlier" | "later") {
+	const initialAppState = useAppState.getState()
+	if (!initialAppState.text) {
+		return
+	}
+
+	const currentHash = await getHashForContent(initialAppState.text)
+	let siblingCheckpoint = await checkpointStore.getSiblingCheckpoint(
+		currentHash,
+		direction
+	)
+	if (!siblingCheckpoint && direction === "earlier") {
+		siblingCheckpoint = await checkpointStore.getLatestCheckpoint()
+	}
+
+	if (!siblingCheckpoint) {
+		return
+	}
+
+	useAppState.getState().setText(siblingCheckpoint.content)
 }

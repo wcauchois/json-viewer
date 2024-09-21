@@ -14,6 +14,13 @@ import clsx from "clsx"
 function CheckpointItem(props: { checkpoint: CheckpointModel }) {
 	const { checkpoint } = props
 
+	const currentText = useAppState(state => state.text)
+
+	const isSelected = useMemo(
+		() => currentText === checkpoint.content,
+		[currentText, checkpoint]
+	)
+
 	const dateTime = useMemo(
 		() => DateTime.fromJSDate(checkpoint.date),
 		[checkpoint.date]
@@ -48,7 +55,10 @@ function CheckpointItem(props: { checkpoint: CheckpointModel }) {
 	return (
 		<div className="flex flex-col mb-2">
 			<div
-				className="flex text-sm border p-1 m-1 hover:border-black cursor-pointer"
+				className={clsx(
+					"flex text-sm border p-1 m-1 cursor-pointer",
+					isSelected ? "border-purple-400" : "hover:border-black"
+				)}
 				onClick={() => {
 					useAppState.getState().setText(checkpoint.content)
 				}}
@@ -138,10 +148,10 @@ function FilterPills(props: {
 											? {
 													type: "find",
 													query: "",
-											  }
+												}
 											: {
 													type: filterType,
-											  }
+												}
 									)
 								}
 							}}

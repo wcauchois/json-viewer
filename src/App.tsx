@@ -12,7 +12,11 @@ import clsx from "clsx"
 import { IconSidebarCollapse, IconSidebarExpand } from "./lib/icons"
 import { keyMap } from "./lib/utils"
 import { ContextMenuRenderer } from "./components/ContextMenuRenderer"
-import { copyToClipboard, pasteFromClipboard } from "./lib/appActions"
+import {
+	copyToClipboard,
+	pasteFromClipboard,
+	selectSiblingCheckpoint,
+} from "./lib/appActions"
 import { callWorkerApi, worker } from "./worker/workerClient"
 import { database } from "./lib/database"
 
@@ -67,6 +71,9 @@ function App() {
 				t: () => setTabIndex(1),
 				p: () => pasteFromClipboard(),
 				c: () => copyToClipboard(),
+				e: () => toggleLeftSidebar(),
+				b: () => selectSiblingCheckpoint("earlier"),
+				f: () => selectSiblingCheckpoint("later"),
 			})
 		}
 	})

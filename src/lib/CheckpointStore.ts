@@ -3,6 +3,7 @@ import { EventEmitter } from "eventemitter3"
 import { z } from "zod"
 import { useEffect, useState } from "react"
 import { database } from "./database"
+import _ from "lodash"
 
 const checkpointSourceSchema = z.union([
 	z.literal("paste"),
@@ -18,7 +19,29 @@ export interface CheckpointModel {
 	source: CheckpointSource
 }
 
-async function getHashForContent(content: string) {
+const CheckpointModel = (() => {
+	const rowSchema = z.object({
+		hash: z.string(),
+		date: z.number(),
+		name: z.string().nullable(),
+		content: z.string(),
+		source: checkpointSourceSchema,
+	})
+
+	return {
+		COLUMNS: ["hash", "date", "name", "content", "source"],
+		rowSchema,
+		mapRow: (driverRow: z.infer<typeof rowSchema>): CheckpointModel => ({
+			date: new Date(driverRow.date * 1000),
+			content: driverRow.content,
+			hash: driverRow.hash,
+			name: driverRow.name ?? undefined,
+			source: driverRow.source,
+		}),
+	}
+})()
+
+export const getHashForContent = _.memoize(async (content: string) => {
 	let normalizedContent = content
 	try {
 		normalizedContent = JSON.stringify(JSON.parse(content))
@@ -31,7 +54,7 @@ async function getHashForContent(content: string) {
 			new TextEncoder().encode(normalizedContent)
 		)
 	)
-}
+})
 
 export interface CheckpointFilter {
 	sourceFilter?: CheckpointSource
@@ -72,13 +95,13 @@ export class CheckpointStore extends EventEmitter<"change"> {
 	async getCheckpoints(filter: CheckpointFilter = {}) {
 		const rows = await database.fetchRows({
 			sql: `
-				select hash, date, name, content, source from checkpoint
+				select ${CheckpointModel.COLUMNS.join(",")} from checkpoint
 				${filter.sourceFilter || filter.query ? "where" : ""}
 				${filter.sourceFilter ? "source = $sourceFilter" : ""}
 				${
 					filter.query
 						? (filter.sourceFilter ? "and " : "") +
-						  "upper(content) like '%' || upper($query) || '%'"
+							"upper(content) like '%' || upper($query) || '%'"
 						: ""
 				}
 				order by date desc
@@ -87,31 +110,62 @@ export class CheckpointStore extends EventEmitter<"change"> {
 				...(filter.sourceFilter
 					? {
 							$sourceFilter: filter.sourceFilter,
-					  }
+						}
 					: {}),
 				...(filter.query
 					? {
 							$query: filter.query,
-					  }
+						}
 					: {}),
 			},
-			rowSchema: z.object({
-				hash: z.string(),
-				date: z.number(),
-				name: z.string().nullable(),
-				content: z.string(),
-				source: checkpointSourceSchema,
-			}),
+			rowSchema: CheckpointModel.rowSchema,
 		})
-		return rows.map(
-			(row): CheckpointModel => ({
-				date: new Date(row.date * 1000),
-				content: row.content,
-				hash: row.hash,
-				name: row.name ?? undefined,
-				source: row.source,
-			})
+		return rows.map(CheckpointModel.mapRow)
+	}
+
+	async getLatestCheckpoint() {
+		const rows = await database.fetchRows({
+			sql: `
+				select ${CheckpointModel.COLUMNS.join(",")} from checkpoint
+				order by date desc
+				limit 1
+			`,
+			rowSchema: CheckpointModel.rowSchema,
+		})
+		return rows.length > 0 ? CheckpointModel.mapRow(rows[0]) : undefined
+	}
+
+	async getSiblingCheckpoint(hash: string, mode: "earlier" | "later") {
+		console.log(
+			"exec:",
+			`
+				select ${CheckpointModel.COLUMNS.map(c => `current.${c}`).join(",")}
+				from checkpoint current
+				join (
+					select hash, ${mode === "earlier" ? "lag" : "lead"}(hash) over (order by date desc) as sibling_hash
+					from checkpoint
+				) sibling
+				on current.hash = sibling.sibling_hash
+				where sibling.hash = $hash
+			`
 		)
+		const rows = await database.fetchRows({
+			sql: `
+				select ${CheckpointModel.COLUMNS.map(c => `current.${c}`).join(",")}
+				from checkpoint current
+				join (
+					select hash, ${mode === "earlier" ? "lead" : "lag"}(hash) over (order by date desc) as sibling_hash
+					from checkpoint
+				) sibling
+				on current.hash = sibling.sibling_hash
+				where sibling.hash = $hash
+			`,
+			bind: {
+				$hash: hash,
+			},
+			rowSchema: CheckpointModel.rowSchema,
+		})
+		return rows.length > 0 ? CheckpointModel.mapRow(rows[0]) : undefined
 	}
 }
 
