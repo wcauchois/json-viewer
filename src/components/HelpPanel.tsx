@@ -1,11 +1,79 @@
 import clsx from "clsx"
-import React from "react"
+import React, { ReactNode } from "react"
 import { intersperseArray } from "../lib/utils"
 
 const ENTER = "↵"
 const SHIFT = "⇧"
+const ESCAPE = "Esc"
+
+function Paragraph(props: { children: ReactNode; className?: string }) {
+	return <div className={clsx("py-1", props.className)}>{props.children}</div>
+}
+
+function Subheader(props: { children: ReactNode }) {
+	return <Paragraph className="font-bold py-2">{props.children}</Paragraph>
+}
+
+function BulletedList(props: { items: Array<ReactNode> }) {
+	return (
+		<ul className="list-disc pl-4 gap-y-1 flex flex-col">
+			{props.items.map((item, i) => (
+				<li key={i}>{item}</li>
+			))}
+		</ul>
+	)
+}
+
+function Keycode(props: { children: ReactNode }) {
+	return <span className="text-yellow-500 font-mono">{props.children}</span>
+}
 
 export function HelpPanel() {
+	return (
+		<div className="flex flex-col px-2 py-1">
+			<div className="font-bold">Help</div>
+			<div className="flex flex-col text-sm">
+				<HelpContent />
+			</div>
+		</div>
+	)
+}
+
+function HelpContent() {
+	return (
+		<>
+			<Subheader>Tips:</Subheader>
+			<BulletedList
+				items={[
+					<>
+						You can use Vim-style keyboard shortcuts (<Keycode>h</Keycode>,{" "}
+						<Keycode>j</Keycode>, <Keycode>k</Keycode>, and <Keycode>l</Keycode>
+						) to navigate the object in the viewer tab.
+					</>,
+					<>
+						Focus can be mostly managed by the keyboard (and uses the browser’s
+						focus facilities.) A certain set of key bindings is available when
+						no element is focused (“Window focus” below.) Think of this as Vim's
+						normal mode. You can use <Keycode>v</Keycode> and{" "}
+						<Keycode>t</Keycode> there to switch between tabs. Press{" "}
+						<Keycode>{ENTER}</Keycode> to focus the current tab, and{" "}
+						<Keycode>{ESCAPE}</Keycode> to return focus to the window (go back
+						to normal mode.)
+					</>,
+					<>
+						Every time you paste an object it’s saved as a checkpoint. Open the
+						checkpoints panel by clicking on the icon in the upper-right or
+						pressing <Keycode>e</Keycode> to view and restore previous pastes.
+					</>,
+				]}
+			/>
+			<Subheader>Keyboard shortcuts:</Subheader>
+			<AppKeyboardShortcuts />
+		</>
+	)
+}
+
+function AppKeyboardShortcuts() {
 	const sharedShortcuts: KeyboardShortcutKey[] = [
 		["e", `Toggle checkpoints panel`],
 		["b", `Go back to previous checkpoint`],
@@ -13,40 +81,35 @@ export function HelpPanel() {
 	]
 
 	return (
-		<div className="flex flex-col px-2 py-1">
-			<div className="font-bold">Help</div>
-			<div className="flex flex-col text-sm">
-				<KeyboardShortcuts
-					spec={[
-						{
-							groupTitle: "Window focus",
-							keys: [
-								["c", `Copy JSON object to clipboard`],
-								["p", `Paste JSON object from clipboard`],
-								["v", `Switch to ‘Viewer’ tab`],
-								["t", `Switch to ‘Text’ tab`],
-								[[SHIFT, "f"], `Go to latest checkpoint`],
-								[ENTER, `Focus current panel`],
-								...sharedShortcuts,
-							],
-						},
-						{
-							groupTitle: "Viewer tab",
-							keys: [
-								["j", `Select next object`],
-								["k", `Select previous object`],
-								["l", `Expand object`],
-								["h", `Collapse object`],
-								[[SHIFT, "l"], `Expand object (recursive)`],
-								[[SHIFT, "h"], `Collapse object (recursive)`],
-								[ENTER, `Show full value in modal (when truncated)`],
-								...sharedShortcuts,
-							],
-						},
-					]}
-				/>
-			</div>
-		</div>
+		<KeyboardShortcuts
+			spec={[
+				{
+					groupTitle: "Window focus",
+					keys: [
+						["c", `Copy JSON object to clipboard`],
+						["p", `Paste JSON object from clipboard`],
+						["v", `Switch to ‘Viewer’ tab`],
+						["t", `Switch to ‘Text’ tab`],
+						[[SHIFT, "f"], `Go to latest checkpoint`],
+						[ENTER, `Focus current panel`],
+						...sharedShortcuts,
+					],
+				},
+				{
+					groupTitle: "Viewer tab",
+					keys: [
+						["j", `Select next object`],
+						["k", `Select previous object`],
+						["l", `Expand object`],
+						["h", `Collapse object`],
+						[[SHIFT, "l"], `Expand object (recursive)`],
+						[[SHIFT, "h"], `Collapse object (recursive)`],
+						[ENTER, `Show full value in modal (when truncated)`],
+						...sharedShortcuts,
+					],
+				},
+			]}
+		/>
 	)
 }
 
@@ -81,12 +144,7 @@ function KeyboardShortcuts(props: {
 									<div className="font-mono flex">
 										{intersperseArray(
 											keys.map((k, ki) => (
-												<div
-													key={`key-${ki}`}
-													className="text-yellow-500 font-mono"
-												>
-													{k}
-												</div>
+												<Keycode key={`key-${ki}`}>{k}</Keycode>
 											)),
 											ii => (
 												<div key={ii} className="px-0.5">
