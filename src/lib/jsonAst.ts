@@ -65,6 +65,24 @@ export function jsonToAST(input: unknown): ASTNode {
 	}
 }
 
+export function astToJson(ast: ASTNode): unknown {
+	if (
+		ast.type === "string" ||
+		ast.type === "number" ||
+		ast.type === "boolean"
+	) {
+		return ast.value
+	} else if (ast.type === "null") {
+		return null
+	} else if (ast.type === "array") {
+		return ast.children.map(child => astToJson(child))
+	} else if (ast.type === "object") {
+		return Object.fromEntries(ast.children)
+	} else {
+		unreachable(ast)
+	}
+}
+
 export function flattenAST(node: ASTNode): ASTNode[] {
 	if (
 		node.type === "string" ||

@@ -3,6 +3,7 @@ import { useAppState } from "../../state/app"
 import {
 	ASTNode,
 	ASTNodeWithValue,
+	astToJson,
 	flattenAST,
 	isNodeWithChildren,
 	isNodeWithValue,
@@ -304,6 +305,17 @@ export const NodeRenderer = React.memo(
 							if (isOverflowing && node.type === "string") {
 								setDetailModalOpen(true)
 							}
+						},
+						["c"]: () => {
+							navigator.clipboard?.writeText(JSON.stringify(astToJson(node)))
+
+							let subject = "Value"
+							if (node.type === "array") {
+								subject = "Array"
+							} else if (node.type === "object") {
+								subject = "Object"
+							}
+							showSnackbar(`${subject} copied to clipboard.`)
 						},
 					})
 				}
