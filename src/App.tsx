@@ -79,7 +79,7 @@ function App() {
 			<PanelGroup direction="horizontal" autoSaveId="main-panel-group">
 				{leftSideBarExpanded && (
 					<>
-						<Panel id="checkpoints" order={1}>
+						<Panel id="checkpoints" order={1} style={{ overflowY: "scroll" }}>
 							<CheckpointPanel />
 						</Panel>
 						<ResizeHandle direction="horizontal" />
