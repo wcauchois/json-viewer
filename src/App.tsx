@@ -16,7 +16,7 @@ import {
 	copyToClipboard,
 	pasteFromClipboard,
 	selectLatestCheckpoint,
-	selectSiblingCheckpoint,
+	sharedAppViewerTabShortcuts,
 } from "./lib/appActions"
 import { callWorkerApi, worker } from "./worker/workerClient"
 import { database } from "./lib/database"
@@ -81,10 +81,8 @@ function App() {
 				t: () => setTabIndex(1),
 				p: () => pasteFromClipboard(),
 				c: () => copyToClipboard(),
-				e: () => toggleLeftSidebar(),
-				b: () => selectSiblingCheckpoint("earlier"),
-				f: () => selectSiblingCheckpoint("later"),
 				"shift+F": () => selectLatestCheckpoint(),
+				...sharedAppViewerTabShortcuts,
 			})
 		}
 	})

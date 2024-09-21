@@ -6,6 +6,12 @@ const ENTER = "↵"
 const SHIFT = "⇧"
 
 export function HelpPanel() {
+	const sharedShortcuts: KeyboardShortcutKey[] = [
+		["e", `Toggle checkpoints panel`],
+		["b", `Go back to previous checkpoint`],
+		["f", `Go forward to next checkpoint`],
+	]
+
 	return (
 		<div className="flex flex-col px-2 py-1">
 			<div className="font-bold">Help</div>
@@ -19,11 +25,9 @@ export function HelpPanel() {
 								["p", `Paste JSON object from clipboard`],
 								["v", `Switch to ‘Viewer’ tab`],
 								["t", `Switch to ‘Text’ tab`],
-								["e", `Toggle checkpoints panel`],
-								["b", `Go back to previous checkpoint`],
-								["f", `Go forward to next checkpoint`],
 								[[SHIFT, "f"], `Go to latest checkpoint`],
 								[ENTER, `Focus current panel`],
+								...sharedShortcuts,
 							],
 						},
 						{
@@ -36,7 +40,7 @@ export function HelpPanel() {
 								[[SHIFT, "l"], `Expand object (recursive)`],
 								[[SHIFT, "h"], `Collapse object (recursive)`],
 								[ENTER, `Show full value in modal (when truncated)`],
-								["e", `Toggle checkpoints panel`],
+								...sharedShortcuts,
 							],
 						},
 					]}
@@ -46,10 +50,15 @@ export function HelpPanel() {
 	)
 }
 
+type KeyboardShortcutKey = [
+	keyOrKeys: string | Array<string>,
+	description: string,
+]
+
 function KeyboardShortcuts(props: {
 	spec: Array<{
 		groupTitle: string
-		keys: Array<[keyOrKeys: string | Array<string>, description: string]>
+		keys: Array<KeyboardShortcutKey>
 	}>
 }) {
 	const { spec } = props

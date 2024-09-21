@@ -1,6 +1,6 @@
 import clsx from "clsx"
 import { AppState, useAppState } from "../../state/app"
-import { isDefined, keyMatch } from "../../lib/utils"
+import { isDefined, keyMap, keyMatch } from "../../lib/utils"
 import { useCallback, useRef, useState } from "react"
 import { useEventListener } from "usehooks-ts"
 import {
@@ -9,6 +9,7 @@ import {
 	NodeRendererHandle,
 } from "./NodeRenderer"
 import _ from "lodash"
+import { sharedAppViewerTabShortcuts } from "../../lib/appActions"
 
 const emptyFunction = () => {}
 
@@ -95,9 +96,8 @@ function ViewerTabSuccessfulParse(props: {
 					) {
 						document.activeElement.blur()
 					}
-				} else if (e.key === "e") {
-					const appState = useAppState.getState()
-					appState.setLeftSidebarExpanded(!appState.leftSidebarExpanded)
+				} else {
+					void keyMap(e, sharedAppViewerTabShortcuts)
 				}
 			}
 		},

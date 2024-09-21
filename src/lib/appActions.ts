@@ -63,3 +63,12 @@ export async function selectLatestCheckpoint() {
 		useAppState.getState().setText(latestCheckpoint.content)
 	}
 }
+
+export const sharedAppViewerTabShortcuts = {
+	e: () => {
+		const appState = useAppState.getState()
+		appState.setLeftSidebarExpanded(!appState.leftSidebarExpanded)
+	},
+	b: () => selectSiblingCheckpoint("earlier"),
+	f: () => selectSiblingCheckpoint("later"),
+}
