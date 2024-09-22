@@ -61,6 +61,13 @@ function HelpContent() {
 						to normal mode.)
 					</>,
 					<>
+						When a string value is really long it will get horizontally
+						truncated. Hover over the row and you will see a magnifying glass;
+						click it to open a modal with the formatted content. You can also
+						use the shortcut <Keycode>{ENTER}</Keycode> while the row is focused
+						with the keyboard.
+					</>,
+					<>
 						Every time you paste an object it’s saved as a checkpoint. Open the
 						checkpoints panel by clicking on the icon in the upper-right or
 						pressing <Keycode>e</Keycode> to view and restore previous pastes.
