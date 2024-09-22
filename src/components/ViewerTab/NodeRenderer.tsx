@@ -292,6 +292,7 @@ export const NodeRenderer = React.memo(
 		const handleKeyDown = useCallback(
 			async (e: React.KeyboardEvent) => {
 				if (document.activeElement === containerRef.current) {
+					// Note: "j" and "k" are handled higher up in ViewerTab.
 					await keyMap(e, {
 						["ArrowRight,l"]: () => {
 							doExpand()
