@@ -2,6 +2,7 @@ import { useAppState } from "../state/app"
 import { showSnackbar } from "../state/snackbar"
 import { checkpointStore, getHashForContent } from "./CheckpointStore"
 import { flattenAST } from "./jsonAst"
+import { isValidJson } from "./utils"
 
 const MAX_LENGTH_FOR_AUTOEXPAND = 5000
 
@@ -20,7 +21,7 @@ export async function pasteFromClipboard() {
 		)
 	}
 
-	if (clipboardText) {
+	if (clipboardText && isValidJson(clipboardText)) {
 		checkpointStore.upsertCheckpoint({
 			content: clipboardText,
 			source: "paste",
@@ -42,12 +43,20 @@ export async function selectSiblingCheckpoint(direction: "earlier" | "later") {
 	}
 
 	const currentHash = await getHashForContent(initialAppState.text)
-	let siblingCheckpoint = await checkpointStore.getSiblingCheckpoint(
-		currentHash,
-		direction
-	)
-	if (!siblingCheckpoint && direction === "earlier") {
+
+	let siblingCheckpoint
+	if (
+		direction === "earlier" &&
+		!(await checkpointStore.doesHashExistAsCheckpoint(currentHash))
+	) {
+		// No checkpoint selected and we're going earlier: select the
+		// latest checkpoint for the user.
 		siblingCheckpoint = await checkpointStore.getLatestCheckpoint()
+	} else {
+		siblingCheckpoint = await checkpointStore.getSiblingCheckpoint(
+			currentHash,
+			direction
+		)
 	}
 
 	if (!siblingCheckpoint) {

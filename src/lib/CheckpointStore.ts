@@ -1,4 +1,4 @@
-import { buf2hex } from "./utils"
+import { buf2hex, ValidJson } from "./utils"
 import { EventEmitter } from "eventemitter3"
 import { z } from "zod"
 import { useEffect, useState } from "react"
@@ -62,7 +62,10 @@ export interface CheckpointFilter {
 }
 
 export class CheckpointStore extends EventEmitter<"change"> {
-	async upsertCheckpoint(args: { content: string; source: CheckpointSource }) {
+	async upsertCheckpoint(args: {
+		content: ValidJson
+		source: CheckpointSource
+	}) {
 		const { content, source } = args
 
 		// https://www.sqlite.org/lang_upsert.html
@@ -153,6 +156,21 @@ export class CheckpointStore extends EventEmitter<"change"> {
 			rowSchema: CheckpointModel.rowSchema,
 		})
 		return rows.length > 0 ? CheckpointModel.mapRow(rows[0]) : undefined
+	}
+
+	async doesHashExistAsCheckpoint(hash: string) {
+		const rows = await database.fetchRows({
+			sql: `
+				select count(*) as count
+				from checkpoint
+				where hash = $hash
+			`,
+			bind: {
+				$hash: hash,
+			},
+			rowSchema: z.object({ count: z.number() }),
+		})
+		return rows[0].count > 0
 	}
 }
 

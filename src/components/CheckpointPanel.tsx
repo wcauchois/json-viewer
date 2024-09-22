@@ -7,9 +7,17 @@ import {
 import { useAppState } from "../state/app"
 import { DateTime } from "luxon"
 import { IconUpload } from "../lib/icons"
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import {
+	ReactNode,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react"
 import { useInterval } from "usehooks-ts"
 import clsx from "clsx"
+import { isValidJson } from "../lib/utils"
 
 function CheckpointItem(props: { checkpoint: CheckpointModel }) {
 	const { checkpoint } = props
@@ -25,6 +33,8 @@ function CheckpointItem(props: { checkpoint: CheckpointModel }) {
 		() => DateTime.fromJSDate(checkpoint.date),
 		[checkpoint.date]
 	)
+
+	const containerRef = useRef<HTMLDivElement>(null)
 
 	const getDateString = useCallback(() => {
 		if (DateTime.local().diff(dateTime, "seconds").seconds < 5) {
@@ -47,6 +57,18 @@ function CheckpointItem(props: { checkpoint: CheckpointModel }) {
 		setDateString(getDateString())
 	}, [getDateString])
 
+	useEffect(() => {
+		if (isSelected) {
+			if (containerRef.current) {
+				containerRef.current.scrollIntoView({
+					block: "nearest",
+					inline: "nearest",
+					behavior: "smooth",
+				})
+			}
+		}
+	}, [isSelected])
+
 	const metadataRows: Array<[string, ReactNode]> = [
 		["date", dateString],
 		["source", checkpoint.source],
@@ -55,6 +77,7 @@ function CheckpointItem(props: { checkpoint: CheckpointModel }) {
 	return (
 		<div className="flex flex-col mb-2">
 			<div
+				ref={containerRef}
 				className={clsx(
 					"flex text-sm border p-1 m-1 cursor-pointer",
 					isSelected ? "border-purple-400" : "hover:border-black"
@@ -218,10 +241,13 @@ export function CheckpointPanel() {
 					<IconUpload
 						className="cursor-pointer"
 						onClick={async () => {
-							await checkpointStore.upsertCheckpoint({
-								content: useAppState.getState().text,
-								source: "manual",
-							})
+							const text = useAppState.getState().text
+							if (isValidJson(text)) {
+								await checkpointStore.upsertCheckpoint({
+									content: text,
+									source: "manual",
+								})
+							}
 						}}
 					/>
 				</div>

@@ -124,7 +124,9 @@ export async function keyMap(
 
 export type EmptyObject = Record<string, never>
 
-export function isValidJson(input: string) {
+export type ValidJson = string & { __isValidJson: true }
+
+export function isValidJson(input: string): input is ValidJson {
 	try {
 		JSON.parse(input)
 		return true
