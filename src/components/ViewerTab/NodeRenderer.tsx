@@ -192,7 +192,11 @@ export const NodeRenderer = React.memo(
 
 		const setNodeExpanded = useAppState(state => state.setNodeExpanded)
 		const setNodesExpanded = useAppState(state => state.setNodesExpanded)
-		const expanded = useAppState(state => state.expandedNodes.has(node))
+		const expandedNodes = useAppState(state => state.expandedNodes)
+		const expanded = useMemo(
+			() => expandedNodes.has(node),
+			[expandedNodes, node]
+		)
 
 		const setExpanded = useCallback(
 			(newExpanded: boolean) => setNodeExpanded(node, newExpanded),
@@ -320,13 +324,7 @@ export const NodeRenderer = React.memo(
 					})
 				}
 			},
-			[
-				doCollapse,
-				doExpand,
-				isOverflowing,
-				node.type,
-				setSelfAndAllChildrenExpanded,
-			]
+			[doCollapse, doExpand, isOverflowing, setSelfAndAllChildrenExpanded, node]
 		)
 
 		const handleContextMenu = useCallback(
