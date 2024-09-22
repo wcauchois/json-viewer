@@ -266,7 +266,7 @@ export const NodeRenderer = React.memo(
 
 		const expandable = isDefined(resolvedChildren)
 
-		const doExpand = useCallback(() => {
+		const expandOrFocusFirstChild = useCallback(() => {
 			if (expandable && expanded) {
 				firstChildRef.current?.focus()
 			} else {
@@ -274,7 +274,7 @@ export const NodeRenderer = React.memo(
 			}
 		}, [expandable, expanded, setExpanded])
 
-		const doCollapse = useCallback(() => {
+		const collapseOrFocusParent = useCallback(() => {
 			if (!expandable || !expanded) {
 				collapseAndFocusParent()
 			} else {
@@ -295,10 +295,10 @@ export const NodeRenderer = React.memo(
 					// Note: "j" and "k" are handled higher up in ViewerTab.
 					await keyMap(e, {
 						["ArrowRight,l"]: () => {
-							doExpand()
+							expandOrFocusFirstChild()
 						},
 						["ArrowLeft,h"]: () => {
-							doCollapse()
+							collapseOrFocusParent()
 						},
 						["shift+H"]: () => {
 							setSelfAndAllChildrenExpanded(false)
@@ -325,7 +325,13 @@ export const NodeRenderer = React.memo(
 					})
 				}
 			},
-			[doCollapse, doExpand, isOverflowing, setSelfAndAllChildrenExpanded, node]
+			[
+				collapseOrFocusParent,
+				expandOrFocusFirstChild,
+				isOverflowing,
+				setSelfAndAllChildrenExpanded,
+				node,
+			]
 		)
 
 		const handleContextMenu = useCallback(
@@ -337,7 +343,7 @@ export const NodeRenderer = React.memo(
 						[
 							{
 								name: "Expand",
-								action: doExpand,
+								action: expandOrFocusFirstChild,
 							},
 							{
 								name: "Expand all",
@@ -347,7 +353,7 @@ export const NodeRenderer = React.memo(
 						[
 							{
 								name: "Collapse",
-								action: doCollapse,
+								action: collapseOrFocusParent,
 							},
 							{
 								name: "Collapse all",
@@ -357,7 +363,11 @@ export const NodeRenderer = React.memo(
 					],
 				})
 			},
-			[doCollapse, doExpand, setSelfAndAllChildrenExpanded]
+			[
+				collapseOrFocusParent,
+				expandOrFocusFirstChild,
+				setSelfAndAllChildrenExpanded,
+			]
 		)
 
 		const childCollapseAndFocusParent = useCallback(() => {
