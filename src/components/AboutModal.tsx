@@ -1,6 +1,7 @@
 import React, { useImperativeHandle, useState } from "react"
 import { Modal } from "./designSystem/Modal"
 import { Header } from "./designSystem/Header"
+import { ExternalLink } from "./designSystem/ExternalLink"
 
 export interface AboutModalHandle {
 	open(): void
@@ -17,6 +18,15 @@ function AboutModalContent() {
 				<li>Save checkpoints along the way.</li>
 				<li>Navigate using keyboard shortcuts.</li>
 			</ul>
+			<Header level={2}>Source Code</Header>
+			<p>
+				<ExternalLink
+					href="https://github.com/wcauchois/json-viewer"
+					target="_blank"
+				>
+					https://github.com/wcauchois/json-viewer
+				</ExternalLink>
+			</p>
 		</div>
 	)
 }
