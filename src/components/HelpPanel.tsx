@@ -72,6 +72,7 @@ function HelpContent() {
 						checkpoints panel by clicking on the icon in the upper-right or
 						pressing <Keycode>e</Keycode> to view and restore previous pastes.
 					</>,
+					<>JSON inside strings is recursively parsed.</>,
 				]}
 			/>
 			<Subheader>Keyboard shortcuts:</Subheader>
