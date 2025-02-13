@@ -289,6 +289,26 @@ export const NodeRenderer = React.memo(
 			[node, setNodesExpanded]
 		)
 
+		const doCopyToClipboard = useCallback(() => {
+			let copyText: string
+			if (node.type === "string") {
+				copyText = node.value
+			} else {
+				copyText = JSON.stringify(astToJson(node))
+			}
+			navigator.clipboard?.writeText(copyText)
+
+			let snackbarText: string
+			if (node.type === "array") {
+				snackbarText = "Array copied to clipboard"
+			} else if (node.type === "object") {
+				snackbarText = "Object copied to clipboard"
+			} else {
+				snackbarText = "Value copied to clipboard"
+			}
+			showSnackbar(snackbarText)
+		}, [node])
+
 		const handleKeyDown = useCallback(
 			async (e: React.KeyboardEvent) => {
 				if (document.activeElement === containerRef.current) {
@@ -312,15 +332,7 @@ export const NodeRenderer = React.memo(
 							}
 						},
 						["c"]: () => {
-							navigator.clipboard?.writeText(JSON.stringify(astToJson(node)))
-
-							let subject = "Value"
-							if (node.type === "array") {
-								subject = "Array"
-							} else if (node.type === "object") {
-								subject = "Object"
-							}
-							showSnackbar(`${subject} copied to clipboard.`)
+							doCopyToClipboard()
 						},
 					})
 				}
@@ -331,6 +343,7 @@ export const NodeRenderer = React.memo(
 				isOverflowing,
 				setSelfAndAllChildrenExpanded,
 				node,
+				doCopyToClipboard,
 			]
 		)
 
@@ -370,6 +383,15 @@ export const NodeRenderer = React.memo(
 			]
 		)
 
+		const handleMouseDown = useCallback(
+			(e: React.MouseEvent) => {
+				if (e.metaKey) {
+					doCopyToClipboard()
+				}
+			},
+			[doCopyToClipboard]
+		)
+
 		const childCollapseAndFocusParent = useCallback(() => {
 			setExpanded(false)
 			containerRef.current?.focus()
@@ -386,6 +408,7 @@ export const NodeRenderer = React.memo(
 					tabIndex={0}
 					onKeyDown={handleKeyDown}
 					onContextMenu={handleContextMenu}
+					onMouseDown={handleMouseDown}
 				>
 					{_.range(0, depth).map(i => (
 						<div

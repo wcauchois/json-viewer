@@ -73,6 +73,10 @@ function HelpContent() {
 						pressing <Keycode>e</Keycode> to view and restore previous pastes.
 					</>,
 					<>JSON inside strings is recursively parsed.</>,
+					<>
+						Command-click on anything in the viewer tab to copy it to your
+						clipboard.
+					</>,
 				]}
 			/>
 			<Subheader>Keyboard shortcuts:</Subheader>
