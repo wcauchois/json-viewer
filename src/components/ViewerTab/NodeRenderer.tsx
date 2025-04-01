@@ -289,6 +289,13 @@ export const NodeRenderer = React.memo(
 			[node, setNodesExpanded]
 		)
 
+		const setSelfAndFirstLevelExpanded = useCallback(() => {
+			setNodesExpanded(
+				[node, ...(node.type === "object" ? node.children.map(c => c[1]) : [])],
+				true
+			)
+		}, [node, setNodesExpanded])
+
 		const doCopyToClipboard = useCallback(() => {
 			let copyText: string
 			if (node.type === "string") {
@@ -362,6 +369,10 @@ export const NodeRenderer = React.memo(
 								name: "Expand all",
 								action: () => setSelfAndAllChildrenExpanded(true),
 							},
+							{
+								name: "Expand first level",
+								action: () => setSelfAndFirstLevelExpanded(),
+							},
 						],
 						[
 							{
@@ -380,6 +391,7 @@ export const NodeRenderer = React.memo(
 				collapseOrFocusParent,
 				expandOrFocusFirstChild,
 				setSelfAndAllChildrenExpanded,
+				setSelfAndFirstLevelExpanded,
 			]
 		)
 
