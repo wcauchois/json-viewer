@@ -77,7 +77,9 @@ export function astToJson(ast: ASTNode): unknown {
 	} else if (ast.type === "array") {
 		return ast.children.map(child => astToJson(child))
 	} else if (ast.type === "object") {
-		return Object.fromEntries(ast.children)
+		return Object.fromEntries(
+			ast.children.map(([key, value]) => [key, astToJson(value)])
+		)
 	} else {
 		unreachable(ast)
 	}
