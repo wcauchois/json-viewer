@@ -1,5 +1,7 @@
 import { useCallback, useRef } from "react"
-import { IconCloseCircle, IconMagnifyingGlass } from "../../lib/icons"
+import { IconCloseCircle, IconMagnifyingGlass } from "../lib/icons"
+import { useEventListener } from "usehooks-ts"
+import { keyMatch } from "../lib/utils"
 
 type FindBarProps = {
 	findQuery: string
@@ -26,28 +28,30 @@ export function FindBar(props: FindBarProps) {
 
 	const inputRef = useRef<HTMLInputElement>(null)
 
-	// useEffect(() => {
-	// 	if (findActive) {
-	// 		inputRef.current?.focus()
-	// 	}
-	// }, [findActive])
-
 	const handleKeyDown = useCallback(
 		(e: React.KeyboardEvent) => {
-			if (e.key === "Escape") {
-				onDismiss()
-			} else if (e.key === "Enter") {
+			if (e.key === "Enter") {
 				incrementCurrentMatchIndex(e.shiftKey ? -1 : 1)
 			}
 		},
-		[incrementCurrentMatchIndex, onDismiss]
+		[incrementCurrentMatchIndex]
 	)
+
+	useEventListener("keydown", e => {
+		if (e.key === "Escape") {
+			onDismiss()
+		} else if (keyMatch(e, "cmd+f")) {
+			inputRef.current?.select()
+			inputRef.current?.focus()
+		}
+	})
 
 	return (
 		<div className="flex items-center gap-2 px-2 py-1 border-b">
 			<IconMagnifyingGlass className="fill-gray-500" />
 			<input
 				ref={inputRef}
+				autoFocus
 				type="text"
 				className="grow text-sm outline-none"
 				placeholder="Find in JSON"

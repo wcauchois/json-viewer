@@ -52,10 +52,12 @@ function useFindState() {
 			action: FindStateAction
 		): FindState | undefined => {
 			if (action.type === "show") {
-				return {
-					query: "",
-					currentMatchIndex: undefined,
-				}
+				return (
+					state ?? {
+						query: "",
+						currentMatchIndex: undefined,
+					}
+				)
 			} else if (action.type === "hide") {
 				return
 			} else if (action.type === "setQuery") {
@@ -131,7 +133,7 @@ function ViewerTabSuccessfulParse(props: {
 		}
 
 		// Find.
-		if (e.metaKey && e.key === "f") {
+		if (keyMatch(e, "cmd+f")) {
 			e.preventDefault()
 			dispatchFindState({ type: "show" })
 		}
