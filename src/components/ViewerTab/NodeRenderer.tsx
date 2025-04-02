@@ -291,7 +291,14 @@ export const NodeRenderer = React.memo(
 
 		const setSelfAndFirstLevelExpanded = useCallback(() => {
 			setNodesExpanded(
-				[node, ...(node.type === "object" ? node.children.map(c => c[1]) : [])],
+				[
+					node,
+					...(node.type === "object"
+						? node.children.map(c => c[1])
+						: node.type === "array"
+							? node.children
+							: []),
+				],
 				true
 			)
 		}, [node, setNodesExpanded])
