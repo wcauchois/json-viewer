@@ -6,6 +6,7 @@ import {
 	ArrowUpOutlined,
 	ArrowDownOutlined,
 	CloseCircleOutlined,
+	SearchOutlined,
 } from "@ant-design/icons"
 
 type FindBarProps = {
@@ -52,8 +53,8 @@ export function FindBar(props: FindBarProps) {
 	})
 
 	return (
-		<div className="flex items-center gap-2 px-2 py-1 border-b">
-			<IconMagnifyingGlass className="fill-gray-500" />
+		<div className="flex items-center gap-2 px-2 py-1 border-b text-base">
+			<SearchOutlined />
 			<input
 				ref={inputRef}
 				autoFocus
@@ -64,10 +65,10 @@ export function FindBar(props: FindBarProps) {
 				onChange={e => setFindQuery(e.currentTarget.value)}
 				onKeyDown={handleKeyDown}
 			/>
-			<div className="flex items-center gap-2 text-sm">
+			<div className="flex items-center gap-2">
 				{matchInfo && (
 					<>
-						<div className="flex items-center gap-1">
+						<div className="flex items-center gap-1 text-sm">
 							<span>
 								{matchInfo.total === 0
 									? // So we show "0/0"
@@ -86,10 +87,7 @@ export function FindBar(props: FindBarProps) {
 						</div>
 					</>
 				)}
-				<CloseCircleOutlined
-					className="cursor-pointer text-base"
-					onClick={onDismiss}
-				/>
+				<CloseCircleOutlined className="cursor-pointer" onClick={onDismiss} />
 			</div>
 		</div>
 	)
