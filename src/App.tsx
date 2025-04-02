@@ -9,7 +9,7 @@ import { ResizeHandle } from "./lib/reactUtils"
 import { CheckpointPanel } from "./components/CheckpointPanel"
 import { checkpointStore } from "./lib/CheckpointStore"
 import clsx from "clsx"
-import { IconHelp, IconSidebarCollapse, IconSidebarExpand } from "./lib/icons"
+import { IconSidebarCollapse, IconSidebarExpand } from "./lib/icons"
 import { keyMap } from "./lib/utils"
 import { ContextMenuRenderer } from "./components/ContextMenuRenderer"
 import {
@@ -21,6 +21,7 @@ import {
 import { callWorkerApi, worker } from "./worker/workerClient"
 import { database } from "./lib/database"
 import { HelpPanel } from "./components/HelpPanel"
+import { QuestionCircleOutlined } from "@ant-design/icons"
 
 interface TabDefinition {
 	name: string
@@ -133,7 +134,7 @@ function App() {
 								))}
 							</div>
 							<IconWrap>
-								<IconHelp
+								<QuestionCircleOutlined
 									className="cursor-pointer"
 									onClick={toggleRightSidebar}
 								/>

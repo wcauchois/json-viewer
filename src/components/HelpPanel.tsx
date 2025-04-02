@@ -116,6 +116,7 @@ function AppKeyboardShortcuts() {
 						["h", `Collapse object`],
 						[[SHIFT, "l"], `Expand object (recursive)`],
 						[[SHIFT, "h"], `Collapse object (recursive)`],
+						[[SHIFT, "f"], `Open find bar`],
 						[ENTER, `Show full value in modal (when truncated)`],
 						...sharedShortcuts,
 					],

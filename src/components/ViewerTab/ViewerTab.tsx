@@ -273,6 +273,18 @@ function ViewerTabSuccessfulParse(props: {
 	)
 }
 
+function ViewerTabFailedParse() {
+	useEventListener("keydown", async e => {
+		if (keyMatch(e, "cmd+f")) {
+			// Still preventDefault on cmd+F so that we don't only
+			// intercept it in successful parse.
+			e.preventDefault()
+		}
+	})
+
+	return <div className="text-sm text-red-700 p-1">Failed to parse</div>
+}
+
 export function ViewerTab(props: { className?: string }) {
 	const { className } = props
 
@@ -283,7 +295,7 @@ export function ViewerTab(props: { className?: string }) {
 			{parseResult.type === "success" ? (
 				<ViewerTabSuccessfulParse parseResult={parseResult} />
 			) : (
-				<div className="text-sm text-red-700 p-1">Failed to parse</div>
+				<ViewerTabFailedParse />
 			)}
 		</div>
 	)
