@@ -1,5 +1,4 @@
 import { useCallback, useRef } from "react"
-import { IconMagnifyingGlass } from "../lib/icons"
 import { useEventListener } from "usehooks-ts"
 import { keyMatch } from "../lib/utils"
 import {

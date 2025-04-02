@@ -5,3 +5,10 @@
 body {
 	overscroll-behavior: none;
 }
+
+.main-text-area:focus {
+	/*
+	text-blue-300: https://tailwindcss.com/docs/colors
+	*/
+	outline: 2px solid oklch(0.809 0.105 251.813);
+}
