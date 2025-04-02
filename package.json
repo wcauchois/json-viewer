@@ -11,6 +11,7 @@
 		"format": "prettier --write \"*.{js,ts}\" tsconfig.json \"src/**/*.{css,tsx,ts}\""
 	},
 	"dependencies": {
+		"@ant-design/icons": "^5.6.1",
 		"@sqlite.org/sqlite-wasm": "^3.44.0-build2",
 		"@types/luxon": "^3.3.5",
 		"clsx": "^2.0.0",
