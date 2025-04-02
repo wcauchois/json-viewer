@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useRef } from "react"
 import { IconCloseCircle, IconMagnifyingGlass } from "../../lib/icons"
 
-interface FindBarProps {
+type FindBarProps = {
 	findQuery: string
 	setFindQuery: (query: string) => void
 	matchInfo:
@@ -37,11 +37,7 @@ export function FindBar(props: FindBarProps) {
 			if (e.key === "Escape") {
 				onDismiss()
 			} else if (e.key === "Enter") {
-				if (e.shiftKey) {
-					incrementCurrentMatchIndex(1)
-				} else {
-					incrementCurrentMatchIndex(-1)
-				}
+				incrementCurrentMatchIndex(e.shiftKey ? -1 : 1)
 			}
 		},
 		[incrementCurrentMatchIndex, onDismiss]

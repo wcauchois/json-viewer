@@ -134,7 +134,12 @@ function NodeValueRenderer(props: { node: ASTNodeWithValue }) {
 
 export const FocusableNodeClass = "app-focusable-node"
 
-interface NodeRendererProps {
+type FindInfo = {
+	foundNodes: ASTNode[]
+	currentFoundNode: ASTNode | undefined
+}
+
+type NodeRendererProps = {
 	node: ASTNode
 	name?: string
 	depth?: number
@@ -142,6 +147,7 @@ interface NodeRendererProps {
 	isLast?: boolean
 	isRoot?: boolean
 	collapseAndFocusParent: () => void
+	findInfo: FindInfo | undefined
 }
 
 export interface NodeRendererHandle {
@@ -188,6 +194,7 @@ export const NodeRenderer = React.memo(
 			isLast,
 			isRoot,
 			collapseAndFocusParent,
+			findInfo,
 		} = props
 
 		const setNodeExpanded = useAppState(state => state.setNodeExpanded)
@@ -451,8 +458,13 @@ export const NodeRenderer = React.memo(
 			}
 		}, [isMatch, findCurrentMatchIndex, findMatchCount])
 		*/
-		const isMatch = false
-		const isCurrentMatch = false
+		const { isMatch, isCurrentMatch } = useMemo(
+			() => ({
+				isMatch: Boolean(findInfo?.foundNodes.includes(node)),
+				isCurrentMatch: findInfo?.currentFoundNode === node,
+			}),
+			[findInfo, node]
+		)
 
 		return (
 			<>
@@ -548,6 +560,7 @@ export const NodeRenderer = React.memo(
 									...(isLast || isRoot ? [] : [depth]),
 								]}
 								collapseAndFocusParent={childCollapseAndFocusParent}
+								findInfo={findInfo}
 							/>
 						)
 					})}

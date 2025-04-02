@@ -10,7 +10,9 @@ export interface AppState {
 	expandedNodes: Set<ASTNode>
 	parseResult: Result<
 		{
+			/** The underlying JSON object. */
 			object: Record<string, unknown>
+			/** AST for the object. */
 			ast: ASTNode
 		},
 		Error
@@ -25,6 +27,11 @@ export interface AppState {
 	rightSidebarExpanded: boolean
 	setRightSidebarExpanded(expanded: boolean): void
 }
+
+export type SuccessfulParseResult = Extract<
+	AppState["parseResult"],
+	{ type: "success" }
+>
 
 /**
  * Recursively parses JSON that's contained in strings within the input object.

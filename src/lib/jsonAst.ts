@@ -86,20 +86,31 @@ export function astToJson(ast: ASTNode): unknown {
 }
 
 export function flattenAST(node: ASTNode): ASTNode[] {
+	const result: ASTNode[] = []
+	visitAST(node, child => {
+		result.push(child)
+	})
+	return result
+}
+
+export function visitAST(node: ASTNode, fn: (node: ASTNode) => void) {
 	if (
 		node.type === "string" ||
 		node.type === "null" ||
 		node.type === "boolean" ||
 		node.type === "number"
 	) {
-		return [node]
+		fn(node)
 	} else if (node.type === "array") {
-		return [node, ...node.children.flatMap(childNode => flattenAST(childNode))]
+		fn(node)
+		for (const child of node.children) {
+			visitAST(child, fn)
+		}
 	} else if (node.type === "object") {
-		return [
-			node,
-			...node.children.flatMap(([, childNode]) => flattenAST(childNode)),
-		]
+		fn(node)
+		for (const [, child] of node.children) {
+			visitAST(child, fn)
+		}
 	} else {
 		unreachable(node)
 	}

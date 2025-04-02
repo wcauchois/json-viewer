@@ -26,6 +26,12 @@ export function isDefined<T>(value: T | undefined): value is T {
 	return value !== undefined
 }
 
+export function assertDefined<T>(value: T | undefined): asserts value is T {
+	if (!isDefined(value)) {
+		throw new Error("Expected value to be defined")
+	}
+}
+
 export function intersperseArray<Value, IntersperseValue>(
 	array: Array<Value>,
 	createIntersperseValue: (index: number) => IntersperseValue
