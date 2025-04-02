@@ -24,7 +24,7 @@ function ViewerTabSuccessfulParse(props: {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const rootNodeRendererRef = useRef<NodeRendererHandle>(null)
 
-	const [findActive, setFindActive] = useState(false)
+	const [findShown, setFindShown] = useState(false)
 
 	useEventListener("keydown", async e => {
 		if (e.target === document.body) {
@@ -36,7 +36,7 @@ function ViewerTabSuccessfulParse(props: {
 		// Find.
 		if (e.metaKey && e.key === "f") {
 			e.preventDefault()
-			setFindActive(true)
+			setFindShown(true)
 		}
 	})
 
