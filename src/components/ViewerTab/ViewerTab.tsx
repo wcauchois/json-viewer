@@ -16,7 +16,7 @@ import {
 } from "./NodeRenderer"
 import _ from "lodash"
 import { sharedAppViewerTabShortcuts } from "../../lib/appActions"
-import { FindBar } from "../designSystem/FindBar"
+import { FindBar } from "../FindBar"
 import { ASTNode, isNodeWithChildren, visitAST } from "../../lib/jsonAst"
 
 const emptyFunction = () => {}
