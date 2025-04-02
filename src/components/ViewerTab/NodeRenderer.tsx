@@ -416,13 +416,53 @@ export const NodeRenderer = React.memo(
 			containerRef.current?.focus()
 		}, [setExpanded])
 
+		/*
+		TODO
+		const findQuery = useAppState(state => state.findQuery)
+		const findMatchCount = useAppState(state => state.findMatchCount)
+		const setFindMatchCount = useAppState(state => state.setFindMatchCount)
+		const findCurrentMatchIndex = useAppState(
+			state => state.findCurrentMatchIndex
+		)
+
+		const isMatch = useMemo(() => {
+			if (!findQuery) return false
+			if (isNodeWithValue(node)) {
+				if (node.type === "null") return false
+				const value = String(node.value)
+				return value.toLowerCase().includes(findQuery.toLowerCase())
+			}
+			return false
+		}, [findQuery, node])
+
+		useEffect(() => {
+			if (isMatch) {
+				setFindMatchCount(findMatchCount + 1)
+			}
+		}, [isMatch, findMatchCount, setFindMatchCount])
+
+		useEffect(() => {
+			if (isMatch && findCurrentMatchIndex === findMatchCount) {
+				containerRef.current?.scrollIntoView({
+					block: "nearest",
+					inline: "nearest",
+					behavior: "smooth",
+				})
+			}
+		}, [isMatch, findCurrentMatchIndex, findMatchCount])
+		*/
+		const isMatch = false
+		const isCurrentMatch = false
+
 		return (
 			<>
 				<div
 					ref={containerRef}
 					className={clsx(
 						"flex items-center gap-1 focus:bg-blue-100 outline-none relative group",
-						FocusableNodeClass
+						FocusableNodeClass,
+						isMatch && "bg-yellow-100",
+						isCurrentMatch && isMatch && "bg-yellow-200"
 					)}
 					tabIndex={0}
 					onKeyDown={handleKeyDown}

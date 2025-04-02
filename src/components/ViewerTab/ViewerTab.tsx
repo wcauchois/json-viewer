@@ -10,6 +10,7 @@ import {
 } from "./NodeRenderer"
 import _ from "lodash"
 import { sharedAppViewerTabShortcuts } from "../../lib/appActions"
+import { FindBar } from "../designSystem/FindBar"
 
 const emptyFunction = () => {}
 
@@ -23,11 +24,19 @@ function ViewerTabSuccessfulParse(props: {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const rootNodeRendererRef = useRef<NodeRendererHandle>(null)
 
+	const [findActive, setFindActive] = useState(false)
+
 	useEventListener("keydown", async e => {
 		if (e.target === document.body) {
 			if (["h", "j", "k", "l", "Enter"].includes(e.key)) {
 				rootNodeRendererRef.current?.focus()
 			}
+		}
+
+		// Find.
+		if (e.metaKey && e.key === "f") {
+			e.preventDefault()
+			setFindActive(true)
 		}
 	})
 
@@ -110,6 +119,7 @@ function ViewerTabSuccessfulParse(props: {
 			ref={containerRef}
 			onKeyDown={handleKeyDown}
 		>
+			<FindBar />
 			<NodeRenderer
 				ref={rootNodeRendererRef}
 				node={parseResult.value.ast}
