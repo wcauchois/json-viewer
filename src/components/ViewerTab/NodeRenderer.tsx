@@ -415,41 +415,6 @@ export const NodeRenderer = React.memo(
 			containerRef.current?.focus()
 		}, [setExpanded])
 
-		/*
-		TODO
-		const findQuery = useAppState(state => state.findQuery)
-		const findMatchCount = useAppState(state => state.findMatchCount)
-		const setFindMatchCount = useAppState(state => state.setFindMatchCount)
-		const findCurrentMatchIndex = useAppState(
-			state => state.findCurrentMatchIndex
-		)
-
-		const isMatch = useMemo(() => {
-			if (!findQuery) return false
-			if (isNodeWithValue(node)) {
-				if (node.type === "null") return false
-				const value = String(node.value)
-				return value.toLowerCase().includes(findQuery.toLowerCase())
-			}
-			return false
-		}, [findQuery, node])
-
-		useEffect(() => {
-			if (isMatch) {
-				setFindMatchCount(findMatchCount + 1)
-			}
-		}, [isMatch, findMatchCount, setFindMatchCount])
-
-		useEffect(() => {
-			if (isMatch && findCurrentMatchIndex === findMatchCount) {
-				containerRef.current?.scrollIntoView({
-					block: "nearest",
-					inline: "nearest",
-					behavior: "smooth",
-				})
-			}
-		}, [isMatch, findCurrentMatchIndex, findMatchCount])
-		*/
 		const { isMatch, isCurrentMatch } = useMemo(
 			() => ({
 				isMatch: Boolean(findInfo?.foundNodes.includes(node)),
@@ -457,6 +422,16 @@ export const NodeRenderer = React.memo(
 			}),
 			[findInfo, node]
 		)
+
+		useEffect(() => {
+			if (isCurrentMatch) {
+				containerRef.current?.scrollIntoView({
+					block: "nearest",
+					inline: "nearest",
+					behavior: "smooth",
+				})
+			}
+		}, [isCurrentMatch])
 
 		return (
 			<>

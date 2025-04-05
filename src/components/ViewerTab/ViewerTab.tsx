@@ -7,7 +7,14 @@ import {
 	keyMatch,
 	unreachable,
 } from "../../lib/utils"
-import { useCallback, useMemo, useReducer, useRef, useState } from "react"
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useReducer,
+	useRef,
+	useState,
+} from "react"
 import { useEventListener } from "usehooks-ts"
 import {
 	FocusableNodeClass,
@@ -95,7 +102,7 @@ function astNodeContainsString(node: ASTNode, str: string) {
 	}
 }
 
-function useFoundNodes(
+function useFoundNodesWithAncestors(
 	findState: FindState | undefined,
 	parseResult: SuccessfulParseResult
 ) {
@@ -103,13 +110,19 @@ function useFoundNodes(
 		if (!findState || findState.query.length === 0) {
 			return []
 		} else {
-			const foundNodes: ASTNode[] = []
-			visitAST(parseResult.value.ast, node => {
-				if (astNodeContainsString(node, findState.query)) {
-					foundNodes.push(node)
+			const result: Array<[node: ASTNode, ancestors: ASTNode[]]> = []
+			visitAST(parseResult.value.ast, (node, ancestors, path) => {
+				if (
+					astNodeContainsString(node, findState.query) ||
+					(path.length > 0 &&
+						path[0].includes(findState.query) &&
+						// Don't match on key if we're dealing with an array (key will be a number.)
+						(ancestors.length === 0 || ancestors[0].type !== "array"))
+				) {
+					result.push([node, ancestors])
 				}
 			})
-			return foundNodes
+			return result
 		}
 	}, [findState, parseResult])
 }
@@ -123,7 +136,10 @@ function ViewerTabSuccessfulParse(props: {
 	const rootNodeRendererRef = useRef<NodeRendererHandle>(null)
 
 	const [findState, dispatchFindState] = useFindState()
-	const foundNodes = useFoundNodes(findState, parseResult)
+	const foundNodesWithAncestors = useFoundNodesWithAncestors(
+		findState,
+		parseResult
+	)
 
 	useEventListener("keydown", async e => {
 		if (e.target === document.body) {
@@ -133,7 +149,7 @@ function ViewerTabSuccessfulParse(props: {
 		}
 
 		// Find.
-		if (keyMatch(e, "cmd+f")) {
+		if (keyMatch(e, "cmd+f") || keyMatch(e, "/")) {
 			e.preventDefault()
 			dispatchFindState({ type: "show" })
 		}
@@ -215,6 +231,33 @@ function ViewerTabSuccessfulParse(props: {
 		[motionMultiplier]
 	)
 
+	// Ensure that the find-selected node is expanded.
+	const setNodesExpanded = useAppState(state => state.setNodesExpanded)
+	useEffect(() => {
+		if (
+			foundNodesWithAncestors.length > 0 &&
+			isDefined(findState?.currentMatchIndex) &&
+			findState.currentMatchIndex < foundNodesWithAncestors.length
+		) {
+			const [node, ancestors] =
+				foundNodesWithAncestors[findState.currentMatchIndex]
+			setNodesExpanded([node, ...ancestors], true)
+		}
+	}, [foundNodesWithAncestors, findState?.currentMatchIndex, setNodesExpanded])
+
+	// Ensure that currentMatchIndex is within bounds.
+	useEffect(() => {
+		if (
+			isDefined(findState?.currentMatchIndex) &&
+			findState.currentMatchIndex >= foundNodesWithAncestors.length
+		) {
+			dispatchFindState({
+				type: "setCurrentMatchIndex",
+				newCurrentMatchIndex: foundNodesWithAncestors.length - 1,
+			})
+		}
+	}, [dispatchFindState, findState?.currentMatchIndex, foundNodesWithAncestors])
+
 	return (
 		<div
 			className="flex flex-col text-sm"
@@ -225,16 +268,18 @@ function ViewerTabSuccessfulParse(props: {
 				<FindBar
 					onDismiss={() => {
 						dispatchFindState({ type: "hide" })
-						rootNodeRendererRef.current?.focusNode(
-							foundNodes[findState?.currentMatchIndex ?? 0]
-						)
+						if (foundNodesWithAncestors.length > 0) {
+							rootNodeRendererRef.current?.focusNode(
+								foundNodesWithAncestors[findState?.currentMatchIndex ?? 0][0]
+							)
+						}
 					}}
 					findQuery={findState.query}
 					matchInfo={
 						isDefined(findState.currentMatchIndex)
 							? {
 									current: findState.currentMatchIndex,
-									total: foundNodes.length,
+									total: foundNodesWithAncestors.length,
 								}
 							: undefined
 					}
@@ -251,8 +296,8 @@ function ViewerTabSuccessfulParse(props: {
 								type: "setCurrentMatchIndex",
 								newCurrentMatchIndex:
 									newIndexUnwrapped < 0
-										? foundNodes.length - 1 // Wraparound
-										: newIndexUnwrapped % foundNodes.length,
+										? foundNodesWithAncestors.length - 1 // Wraparound
+										: newIndexUnwrapped % foundNodesWithAncestors.length,
 							})
 						}
 					}}
@@ -266,9 +311,9 @@ function ViewerTabSuccessfulParse(props: {
 				findInfo={
 					findState
 						? {
-								foundNodes,
+								foundNodes: foundNodesWithAncestors.map(([n]) => n),
 								currentFoundNode: isDefined(findState.currentMatchIndex)
-									? foundNodes[findState.currentMatchIndex]
+									? foundNodesWithAncestors[findState.currentMatchIndex]?.[0]
 									: undefined,
 							}
 						: undefined
