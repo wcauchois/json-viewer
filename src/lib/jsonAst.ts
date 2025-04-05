@@ -86,20 +86,46 @@ export function astToJson(ast: ASTNode): unknown {
 }
 
 export function flattenAST(node: ASTNode): ASTNode[] {
+	const result: ASTNode[] = []
+	visitAST(node, child => {
+		result.push(child)
+	})
+	return result
+}
+
+export function visitAST(
+	node: ASTNode,
+	/**
+	 * @param ancestors Closest parent at the beginning of the list.
+	 * @param path Path of keys leading to this node, the node's name will be at the front
+	 *   (unless it's the root node.)
+	 */
+	fn: (node: ASTNode, ancestors: ASTNode[], path: string[]) => void,
+	ancestorsSoFar: ASTNode[] = [],
+	pathSoFar: string[] = []
+) {
 	if (
 		node.type === "string" ||
 		node.type === "null" ||
 		node.type === "boolean" ||
 		node.type === "number"
 	) {
-		return [node]
+		fn(node, ancestorsSoFar, pathSoFar)
 	} else if (node.type === "array") {
-		return [node, ...node.children.flatMap(childNode => flattenAST(childNode))]
+		fn(node, ancestorsSoFar, pathSoFar)
+		for (const [index, child] of node.children.entries()) {
+			visitAST(
+				child,
+				fn,
+				[node, ...ancestorsSoFar],
+				[index.toString(), ...pathSoFar]
+			)
+		}
 	} else if (node.type === "object") {
-		return [
-			node,
-			...node.children.flatMap(([, childNode]) => flattenAST(childNode)),
-		]
+		fn(node, ancestorsSoFar, pathSoFar)
+		for (const [key, child] of node.children) {
+			visitAST(child, fn, [node, ...ancestorsSoFar], [key, ...pathSoFar])
+		}
 	} else {
 		unreachable(node)
 	}

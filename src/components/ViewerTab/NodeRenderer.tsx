@@ -134,7 +134,12 @@ function NodeValueRenderer(props: { node: ASTNodeWithValue }) {
 
 export const FocusableNodeClass = "app-focusable-node"
 
-interface NodeRendererProps {
+type FindInfo = {
+	foundNodes: ASTNode[]
+	currentFoundNode: ASTNode | undefined
+}
+
+type NodeRendererProps = {
 	node: ASTNode
 	name?: string
 	depth?: number
@@ -142,37 +147,15 @@ interface NodeRendererProps {
 	isLast?: boolean
 	isRoot?: boolean
 	collapseAndFocusParent: () => void
+	findInfo: FindInfo | undefined
 }
 
 export interface NodeRendererHandle {
 	focus(): void
-}
-
-function DetailModal(props: {
-	node: Extract<ASTNode, { type: "string" }>
-	onClose: () => void
-}) {
-	const { onClose, node } = props
-
-	return (
-		<Modal
-			onClose={onClose}
-			onKeyDown={async e => {
-				await keyMap(e, {
-					Enter: () => onClose(),
-					c: () => {
-						navigator.clipboard.writeText(node.value)
-						showSnackbar("Value copied to clipboard.")
-					},
-				})
-			}}
-			className="min-w-[min(600px,100vw-40px)] max-w-[calc(100vw-40px)] max-h-[calc(100vh-40px)]"
-		>
-			<div className="flex">
-				<pre className="overflow-scroll px-2 text-xs">{node.value}</pre>
-			</div>
-		</Modal>
-	)
+	/**
+	 * Focus the specified node -- whether this node, or a child node.
+	 */
+	focusNode(node: ASTNode): void
 }
 
 export const NodeRenderer = React.memo(
@@ -188,6 +171,7 @@ export const NodeRenderer = React.memo(
 			isLast,
 			isRoot,
 			collapseAndFocusParent,
+			findInfo,
 		} = props
 
 		const setNodeExpanded = useAppState(state => state.setNodeExpanded)
@@ -229,24 +213,16 @@ export const NodeRenderer = React.memo(
 			return () => observer.disconnect()
 		}, [nameAndValueRef])
 
-		useImperativeHandle(
-			ref,
-			() => ({
-				focus() {
-					containerRef.current?.focus()
-				},
-			}),
-			[]
-		)
-
-		const firstChildRef = useRef<NodeRendererHandle>(null)
-
 		const [detailModalOpen, setDetailModalOpen] = useState(false)
 		const closeDetailModal = () => {
 			setDetailModalOpen(false)
 			containerRef.current?.focus() // Return focus
 		}
 
+		/**
+		 * Children of arrays and objects, represented uniformly in a [key, value]
+		 * format (e.g. array indices become keys.)
+		 */
 		const resolvedChildren = useMemo(():
 			| Array<[childName: string, childNode: ASTNode]>
 			| undefined => {
@@ -264,11 +240,34 @@ export const NodeRenderer = React.memo(
 			}
 		}, [node])
 
+		const childRefs = useRef<Array<NodeRendererHandle | undefined>>(
+			Array(resolvedChildren?.length ?? 0).fill(undefined)
+		)
+
 		const expandable = isDefined(resolvedChildren)
+
+		useImperativeHandle(
+			ref,
+			() => ({
+				focus() {
+					containerRef.current?.focus()
+				},
+				focusNode(nodeArg) {
+					if (node === nodeArg) {
+						containerRef.current?.focus()
+					} else {
+						for (const childHandle of childRefs.current) {
+							childHandle?.focusNode(nodeArg)
+						}
+					}
+				},
+			}),
+			[node]
+		)
 
 		const expandOrFocusFirstChild = useCallback(() => {
 			if (expandable && expanded) {
-				firstChildRef.current?.focus()
+				childRefs.current?.[0]?.focus()
 			} else {
 				setExpanded(true)
 			}
@@ -416,13 +415,33 @@ export const NodeRenderer = React.memo(
 			containerRef.current?.focus()
 		}, [setExpanded])
 
+		const { isMatch, isCurrentMatch } = useMemo(
+			() => ({
+				isMatch: Boolean(findInfo?.foundNodes.includes(node)),
+				isCurrentMatch: findInfo?.currentFoundNode === node,
+			}),
+			[findInfo, node]
+		)
+
+		useEffect(() => {
+			if (isCurrentMatch) {
+				containerRef.current?.scrollIntoView({
+					block: "nearest",
+					inline: "nearest",
+					behavior: "smooth",
+				})
+			}
+		}, [isCurrentMatch])
+
 		return (
 			<>
 				<div
 					ref={containerRef}
 					className={clsx(
 						"flex items-center gap-1 focus:bg-blue-100 outline-none relative group",
-						FocusableNodeClass
+						FocusableNodeClass,
+						isMatch && "bg-yellow-100",
+						isCurrentMatch && isMatch && "bg-yellow-200"
 					)}
 					tabIndex={0}
 					onKeyDown={handleKeyDown}
@@ -497,7 +516,11 @@ export const NodeRenderer = React.memo(
 							isDefined(resolvedChildren) && i === resolvedChildren.length - 1
 						return (
 							<NodeRenderer
-								ref={i === 0 ? firstChildRef : undefined}
+								ref={handle => {
+									if (childRefs.current) {
+										childRefs.current[i] = handle ?? undefined
+									}
+								}}
 								key={childName}
 								node={childNode}
 								name={childName}
@@ -508,6 +531,7 @@ export const NodeRenderer = React.memo(
 									...(isLast || isRoot ? [] : [depth]),
 								]}
 								collapseAndFocusParent={childCollapseAndFocusParent}
+								findInfo={findInfo}
 							/>
 						)
 					})}
@@ -515,3 +539,30 @@ export const NodeRenderer = React.memo(
 		)
 	})
 )
+
+function DetailModal(props: {
+	node: Extract<ASTNode, { type: "string" }>
+	onClose: () => void
+}) {
+	const { onClose, node } = props
+
+	return (
+		<Modal
+			onClose={onClose}
+			onKeyDown={async e => {
+				await keyMap(e, {
+					Enter: () => onClose(),
+					c: () => {
+						navigator.clipboard.writeText(node.value)
+						showSnackbar("Value copied to clipboard.")
+					},
+				})
+			}}
+			className="min-w-[min(600px,100vw-40px)] max-w-[calc(100vw-40px)] max-h-[calc(100vh-40px)]"
+		>
+			<div className="flex">
+				<pre className="overflow-scroll px-2 text-xs">{node.value}</pre>
+			</div>
+		</Modal>
+	)
+}
