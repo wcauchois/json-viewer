@@ -81,7 +81,9 @@ function useFindState() {
 				assertDefined(state)
 				return {
 					...state,
-					currentMatchIndex: action.newCurrentMatchIndex,
+					currentMatchIndex: isDefined(action.newCurrentMatchIndex)
+						? Math.max(0, action.newCurrentMatchIndex)
+						: undefined,
 				}
 			} else {
 				unreachable(action)
@@ -300,7 +302,7 @@ function ViewerTabSuccessfulParse(props: {
 								type: "setCurrentMatchIndex",
 								newCurrentMatchIndex:
 									newIndexUnwrapped < 0
-										? Math.max(0, foundNodesWithAncestors.length - 1) // Wraparound
+										? foundNodesWithAncestors.length - 1 // Wraparound
 										: newIndexUnwrapped % foundNodesWithAncestors.length,
 							})
 						}
