@@ -79,7 +79,10 @@ function useFindState() {
 				}
 			} else if (action.type === "setCurrentMatchIndex") {
 				assertDefined(state)
-				return { ...state, currentMatchIndex: action.newCurrentMatchIndex }
+				return {
+					...state,
+					currentMatchIndex: action.newCurrentMatchIndex,
+				}
 			} else {
 				unreachable(action)
 			}
@@ -260,12 +263,13 @@ function ViewerTabSuccessfulParse(props: {
 
 	return (
 		<div
-			className="flex flex-col text-sm"
+			className="flex flex-col text-sm relative"
 			ref={containerRef}
 			onKeyDown={handleKeyDown}
 		>
 			{findState && (
 				<FindBar
+					className="sticky top-0 bg-white z-10"
 					onDismiss={() => {
 						dispatchFindState({ type: "hide" })
 						if (foundNodesWithAncestors.length > 0) {
@@ -296,7 +300,7 @@ function ViewerTabSuccessfulParse(props: {
 								type: "setCurrentMatchIndex",
 								newCurrentMatchIndex:
 									newIndexUnwrapped < 0
-										? foundNodesWithAncestors.length - 1 // Wraparound
+										? Math.max(0, foundNodesWithAncestors.length - 1) // Wraparound
 										: newIndexUnwrapped % foundNodesWithAncestors.length,
 							})
 						}

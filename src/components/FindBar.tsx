@@ -7,6 +7,7 @@ import {
 	CloseCircleOutlined,
 	SearchOutlined,
 } from "@ant-design/icons"
+import clsx from "clsx"
 
 type FindBarProps = {
 	findQuery: string
@@ -20,6 +21,7 @@ type FindBarProps = {
 	/** Dismiss by pressing escape */
 	onDismiss(): void
 	incrementCurrentMatchIndex(amount: number): void
+	className?: string
 }
 
 export function FindBar(props: FindBarProps) {
@@ -52,7 +54,12 @@ export function FindBar(props: FindBarProps) {
 	})
 
 	return (
-		<div className="flex items-center gap-2 px-2 py-1 border-b text-base">
+		<div
+			className={clsx(
+				"flex items-center gap-2 px-2 py-1 border-b text-base",
+				props.className
+			)}
+		>
 			<SearchOutlined />
 			<input
 				ref={inputRef}
