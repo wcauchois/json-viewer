@@ -223,7 +223,12 @@ function ViewerTabSuccessfulParse(props: {
 		>
 			{findState && (
 				<FindBar
-					onDismiss={() => dispatchFindState({ type: "hide" })}
+					onDismiss={() => {
+						dispatchFindState({ type: "hide" })
+						rootNodeRendererRef.current?.focusNode(
+							foundNodes[findState?.currentMatchIndex ?? 0]
+						)
+					}}
 					findQuery={findState.query}
 					matchInfo={
 						isDefined(findState.currentMatchIndex)
