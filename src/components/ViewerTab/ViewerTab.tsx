@@ -112,7 +112,7 @@ function useFoundNodesWithAncestors(
 	parseResult: SuccessfulParseResult
 ) {
 	return useMemo(() => {
-		if (!findState || findState.query.length === 0) {
+		if (!findState?.query) {
 			return []
 		} else {
 			const result: Array<[node: ASTNode, ancestors: ASTNode[]]> = []
@@ -129,7 +129,7 @@ function useFoundNodesWithAncestors(
 			})
 			return result
 		}
-	}, [findState, parseResult])
+	}, [findState?.query, parseResult])
 }
 
 function ViewerTabSuccessfulParse(props: {
