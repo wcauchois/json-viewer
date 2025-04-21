@@ -67,11 +67,6 @@ function HelpContent() {
 						use the shortcut <Keycode>{ENTER}</Keycode> while the row is focused
 						with the keyboard.
 					</>,
-					<>
-						Every time you paste an object it’s saved as a checkpoint. Open the
-						checkpoints panel by clicking on the icon in the upper-right or
-						pressing <Keycode>e</Keycode> to view and restore previous pastes.
-					</>,
 					<>JSON inside strings is recursively parsed.</>,
 					<>
 						Command-click on anything in the viewer tab to copy it to your
@@ -86,12 +81,6 @@ function HelpContent() {
 }
 
 function AppKeyboardShortcuts() {
-	const sharedShortcuts: KeyboardShortcutKey[] = [
-		["e", `Toggle checkpoints panel`],
-		["b", `Go back to previous checkpoint`],
-		["f", `Go forward to next checkpoint`],
-	]
-
 	return (
 		<KeyboardShortcuts
 			spec={[
@@ -104,7 +93,6 @@ function AppKeyboardShortcuts() {
 						["t", `Switch to ‘Text’ tab`],
 						[[SHIFT, "f"], `Go to latest checkpoint`],
 						[ENTER, `Focus current panel`],
-						...sharedShortcuts,
 					],
 				},
 				{
@@ -118,7 +106,6 @@ function AppKeyboardShortcuts() {
 						[[SHIFT, "h"], `Collapse object (recursive)`],
 						[[SHIFT, "f"], `Open find bar`],
 						[ENTER, `Show full value in modal (when truncated)`],
-						...sharedShortcuts,
 					],
 				},
 			]}

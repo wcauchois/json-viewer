@@ -22,8 +22,6 @@ export interface AppState {
 	tabIndex: number
 	setTabIndex: (index: number) => void
 
-	leftSidebarExpanded: boolean
-	setLeftSidebarExpanded(expanded: boolean): void
 	rightSidebarExpanded: boolean
 	setRightSidebarExpanded(expanded: boolean): void
 }
@@ -97,12 +95,6 @@ export const useAppState = create<AppState>((set, get) => ({
 	tabIndex: 1,
 	setTabIndex: index => set({ tabIndex: index }),
 
-	leftSidebarExpanded: false,
-	setLeftSidebarExpanded(expanded) {
-		set({
-			leftSidebarExpanded: expanded,
-		})
-	},
 	rightSidebarExpanded: false,
 	setRightSidebarExpanded(expanded) {
 		set({
@@ -115,15 +107,11 @@ const LOCAL_STORAGE_KEY = "appState"
 
 interface LocalStorageValue {
 	text: string
-	leftSidebarExpanded: boolean
 	tabIndex: number | undefined
 }
 
 export function useAppStateStorage() {
 	const setText = useAppState(state => state.setText)
-	const setLeftSidebarExpanded = useAppState(
-		state => state.setLeftSidebarExpanded
-	)
 	const setTabIndex = useAppState(state => state.setTabIndex)
 
 	useEffect(() => {
@@ -131,7 +119,6 @@ export function useAppStateStorage() {
 		if (storageValue) {
 			const storageJsonValue: LocalStorageValue = JSON.parse(storageValue)
 			setText(storageJsonValue.text)
-			setLeftSidebarExpanded(storageJsonValue.leftSidebarExpanded)
 			if (isDefined(storageJsonValue.tabIndex)) {
 				setTabIndex(storageJsonValue.tabIndex)
 			}
@@ -140,7 +127,6 @@ export function useAppStateStorage() {
 		return useAppState.subscribe(state => {
 			const storageJsonValue: LocalStorageValue = {
 				text: state.text,
-				leftSidebarExpanded: state.leftSidebarExpanded,
 				tabIndex: state.tabIndex,
 			}
 			window.localStorage.setItem(
@@ -148,5 +134,5 @@ export function useAppStateStorage() {
 				JSON.stringify(storageJsonValue)
 			)
 		})
-	}, [setLeftSidebarExpanded, setTabIndex, setText])
+	}, [setTabIndex, setText])
 }

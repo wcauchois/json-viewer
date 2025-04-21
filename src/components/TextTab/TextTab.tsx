@@ -6,8 +6,8 @@ import { useEventListener } from "usehooks-ts"
 import { isValidJson, keyMap } from "../../lib/utils"
 import { copyToClipboard, pasteFromClipboard } from "../../lib/appActions"
 import { Toolbar } from "../designSystem/Toolbar"
-import { checkpointStore } from "../../lib/CheckpointStore"
 import { AboutModal, AboutModalHandle } from "../AboutModal"
+import { forceCommitToHash } from "../../lib/routing"
 
 export function TextTab(props: { className?: string }) {
 	const { className } = props
@@ -95,10 +95,7 @@ export function TextTab(props: { className?: string }) {
 				onPaste={e => {
 					const value = e.clipboardData.getData("text")
 					if (isValidJson(value)) {
-						checkpointStore.upsertCheckpoint({
-							content: value,
-							source: "paste",
-						})
+						forceCommitToHash()
 					}
 				}}
 				onKeyDown={e => {
