@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react"
+
 export type Result<S, F> =
 	| { type: "success"; value: S }
 	| { type: "failure"; error: F }
@@ -139,4 +141,20 @@ export function isValidJson(input: string): input is ValidJson {
 	} catch {
 		return false
 	}
+}
+
+export function useOnInitialMount(fn: () => void) {
+	const didMount = useRef(false)
+	useEffect(
+		() => {
+			if (didMount.current) {
+				return
+			}
+			fn()
+			didMount.current = true
+		},
+		// Doesn't matter if fn changes.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[]
+	)
 }
