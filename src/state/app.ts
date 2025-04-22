@@ -106,19 +106,16 @@ export const useAppState = create<AppState>((set, get) => ({
 const LOCAL_STORAGE_KEY = "appState"
 
 interface LocalStorageValue {
-	text: string
 	tabIndex: number | undefined
 }
 
 export function useAppStateStorage() {
-	const setText = useAppState(state => state.setText)
 	const setTabIndex = useAppState(state => state.setTabIndex)
 
 	useEffect(() => {
 		const storageValue = window.localStorage.getItem(LOCAL_STORAGE_KEY)
 		if (storageValue) {
 			const storageJsonValue: LocalStorageValue = JSON.parse(storageValue)
-			setText(storageJsonValue.text)
 			if (isDefined(storageJsonValue.tabIndex)) {
 				setTabIndex(storageJsonValue.tabIndex)
 			}
@@ -126,7 +123,6 @@ export function useAppStateStorage() {
 
 		return useAppState.subscribe(state => {
 			const storageJsonValue: LocalStorageValue = {
-				text: state.text,
 				tabIndex: state.tabIndex,
 			}
 			window.localStorage.setItem(
@@ -134,5 +130,5 @@ export function useAppStateStorage() {
 				JSON.stringify(storageJsonValue)
 			)
 		})
-	}, [setTabIndex, setText])
+	}, [setTabIndex])
 }

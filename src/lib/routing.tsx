@@ -6,7 +6,7 @@ import { worker } from "../worker/workerClient"
 // Some stuff cribbed from: https://github.com/topaz/paste/blob/master/index.html
 
 export function forceCommitToHash() {
-	//TODO
+	// TODO: Do I need this?
 }
 
 function getTextFromHash() {
