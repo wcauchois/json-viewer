@@ -1,8 +1,7 @@
 import { useAppState } from "../state/app"
 import { showSnackbar } from "../state/snackbar"
 import { flattenAST } from "./jsonAst"
-import { forceCommitToHash } from "./routing"
-import { isValidJson } from "./utils"
+import { forceHistoryPush } from "./routing"
 
 const MAX_LENGTH_FOR_AUTOEXPAND = 5000
 
@@ -21,9 +20,7 @@ export async function pasteFromClipboard() {
 		)
 	}
 
-	if (clipboardText && isValidJson(clipboardText)) {
-		forceCommitToHash()
-	}
+	forceHistoryPush()
 	showSnackbar("Pasted from clipboard.")
 }
 

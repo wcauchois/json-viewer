@@ -5,9 +5,12 @@ import { worker } from "../worker/workerClient"
 
 // Some stuff cribbed from: https://github.com/topaz/paste/blob/master/index.html
 
-export function forceCommitToHash() {
-	const { text } = useAppState.getState()
-	setHashFromText(text, { saveBeforeReplacing: true })
+// It'd be better if this was in context and not a global variable, but let's
+// be lazy and assume there's only ever one router.
+let shouldForceHistoryPush = false
+
+export async function forceHistoryPush() {
+	shouldForceHistoryPush = true
 }
 
 async function getTextFromHash() {
@@ -52,10 +55,7 @@ async function getTextFromHash() {
 	}
 }
 
-async function setHashFromText(
-	text: string,
-	options: { saveBeforeReplacing?: boolean } = {}
-) {
+async function convertTextToCompressedBase64(text: string) {
 	// String -> Uint8Array
 	const encoder = new TextEncoder()
 	const encoded = encoder.encode(text)
@@ -77,19 +77,14 @@ async function setHashFromText(
 	}
 
 	const base64 = reader.result.substring(reader.result.indexOf(",") + 1)
+	return base64
+}
 
-	if (options.saveBeforeReplacing) {
-		// XX: not working?
-		window.history.pushState(
-			new Date().toISOString(),
-			"",
-			new URL(window.location.href)
-		)
-	}
-
-	const nextUrl = new URL(window.location.href)
-	nextUrl.hash = `#/${base64}`
-	window.history.replaceState(new Date().toISOString(), "", nextUrl)
+async function createUrlForText(text: string) {
+	const base64 = await convertTextToCompressedBase64(text)
+	const url = new URL(window.location.href)
+	url.hash = `#/${base64}`
+	return url
 }
 
 function useSyncRouteToState() {
@@ -106,8 +101,14 @@ function useSyncRouteToState() {
 	// Sync state to hash on state change.
 	useEffect(
 		() =>
-			useAppState.subscribe(nextState => {
-				setHashFromText(nextState.text)
+			useAppState.subscribe(async ({ text }) => {
+				const newUrl = await createUrlForText(text)
+				if (shouldForceHistoryPush) {
+					window.history.pushState(text, "", newUrl)
+					shouldForceHistoryPush = false
+				} else {
+					window.history.replaceState(text, "", newUrl)
+				}
 			}),
 		[]
 	)
@@ -122,6 +123,19 @@ function useSyncRouteToState() {
 		}
 		window.addEventListener("hashchange", listener)
 		return () => window.removeEventListener("hashchange", listener)
+	}, [setText])
+
+	// Sync history state to app state on popstate
+	useEffect(() => {
+		async function listener(e: PopStateEvent) {
+			if (typeof e.state !== "string") {
+				return
+			}
+			const textFromHistory = e.state
+			setText(textFromHistory)
+		}
+		window.addEventListener("popstate", listener)
+		return () => window.removeEventListener("popstate", listener)
 	}, [setText])
 }
 
