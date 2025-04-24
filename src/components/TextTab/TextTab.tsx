@@ -3,10 +3,9 @@ import { useAppState } from "../../state/app"
 import { useRef } from "react"
 import { showSnackbar } from "../../state/snackbar"
 import { useEventListener } from "usehooks-ts"
-import { isValidJson, keyMap } from "../../lib/utils"
+import { keyMap } from "../../lib/utils"
 import { copyToClipboard, pasteFromClipboard } from "../../lib/appActions"
 import { Toolbar } from "../designSystem/Toolbar"
-import { checkpointStore } from "../../lib/CheckpointStore"
 import { AboutModal, AboutModalHandle } from "../AboutModal"
 
 export function TextTab(props: { className?: string }) {
@@ -92,15 +91,6 @@ export function TextTab(props: { className?: string }) {
 				className="p-1 text-xs font-mono resize-none grow main-text-area"
 				value={text}
 				onChange={e => setText(e.currentTarget.value)}
-				onPaste={e => {
-					const value = e.clipboardData.getData("text")
-					if (isValidJson(value)) {
-						checkpointStore.upsertCheckpoint({
-							content: value,
-							source: "paste",
-						})
-					}
-				}}
 				onKeyDown={e => {
 					if (e.key === "Escape") {
 						textareaRef.current?.blur()

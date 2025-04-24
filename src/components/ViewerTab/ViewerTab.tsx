@@ -3,7 +3,6 @@ import { SuccessfulParseResult, useAppState } from "../../state/app"
 import {
 	assertDefined,
 	isDefined,
-	keyMap,
 	keyMatch,
 	unreachable,
 } from "../../lib/utils"
@@ -22,7 +21,6 @@ import {
 	NodeRendererHandle,
 } from "./NodeRenderer"
 import _ from "lodash"
-import { sharedAppViewerTabShortcuts } from "../../lib/appActions"
 import { FindBar } from "../FindBar"
 import { ASTNode, isNodeWithChildren, visitAST } from "../../lib/jsonAst"
 
@@ -228,7 +226,7 @@ function ViewerTabSuccessfulParse(props: {
 				} else {
 					// Exclude find bar from other shortcuts.
 					if (!(e.target instanceof HTMLInputElement)) {
-						void keyMap(e, sharedAppViewerTabShortcuts)
+						// TODO? Any keyboard shortcuts that are shared between the tabs.
 					}
 				}
 			}
