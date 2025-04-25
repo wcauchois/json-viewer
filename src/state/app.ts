@@ -2,7 +2,7 @@ import { create } from "zustand"
 import { Result, isDefined } from "../lib/utils"
 import { ASTNode, jsonToAST } from "../lib/jsonAst"
 import { Set } from "immutable"
-import { useEffect } from "react"
+import { useCallback, useEffect } from "react"
 
 export interface AppState {
 	text: string
@@ -131,4 +131,14 @@ export function useAppStateStorage() {
 			)
 		})
 	}, [setTabIndex])
+}
+
+export function useToggleRightSidebar() {
+	const rightSideBarExpanded = useAppState(state => state.rightSidebarExpanded)
+	const setRightSideBarExpanded = useAppState(
+		state => state.setRightSidebarExpanded
+	)
+	return useCallback(() => {
+		setRightSideBarExpanded(!rightSideBarExpanded)
+	}, [rightSideBarExpanded, setRightSideBarExpanded])
 }

@@ -1,8 +1,12 @@
 import { SnackbarRenderer } from "./components/SnackbarRenderer"
 import { TextTab } from "./components/TextTab/TextTab"
 import { ViewerTab } from "./components/ViewerTab/ViewerTab"
-import { ReactNode, useCallback, useEffect } from "react"
-import { useAppState, useAppStateStorage } from "./state/app"
+import { ReactNode, useEffect } from "react"
+import {
+	useAppState,
+	useAppStateStorage,
+	useToggleRightSidebar,
+} from "./state/app"
 import { useEventListener } from "usehooks-ts"
 import { Panel, PanelGroup } from "react-resizable-panels"
 import { ResizeHandle } from "./lib/reactUtils"
@@ -43,12 +47,7 @@ function App() {
 	]
 
 	const rightSideBarExpanded = useAppState(state => state.rightSidebarExpanded)
-	const setRightSideBarExpanded = useAppState(
-		state => state.setRightSidebarExpanded
-	)
-	const toggleRightSidebar = useCallback(() => {
-		setRightSideBarExpanded(!rightSideBarExpanded)
-	}, [rightSideBarExpanded, setRightSideBarExpanded])
+	const toggleRightSidebar = useToggleRightSidebar()
 
 	useEventListener("keydown", async e => {
 		if (e.target === document.body) {

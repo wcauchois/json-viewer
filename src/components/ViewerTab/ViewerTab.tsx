@@ -1,5 +1,9 @@
 import clsx from "clsx"
-import { SuccessfulParseResult, useAppState } from "../../state/app"
+import {
+	SuccessfulParseResult,
+	useAppState,
+	useToggleRightSidebar,
+} from "../../state/app"
 import {
 	assertDefined,
 	isDefined,
@@ -23,6 +27,7 @@ import {
 import _ from "lodash"
 import { FindBar } from "../FindBar"
 import { ASTNode, isNodeWithChildren, visitAST } from "../../lib/jsonAst"
+import { IconBraces, IconBracketsLine, IconCross } from "../../lib/icons"
 
 const emptyFunction = () => {}
 
@@ -336,17 +341,63 @@ function ViewerTabFailedParse() {
 		}
 	})
 
-	return <div className="text-sm text-red-700 p-1">Failed to parse</div>
+	const setTabIndex = useAppState(state => state.setTabIndex)
+
+	return (
+		<div className="flex items-center gap-2 p-4 text-sm text-red-700 bg-red-50 rounded-md m-4 border border-red-200">
+			<IconCross />
+			Failed to parse JSON.{" "}
+			<span
+				className="underline cursor-pointer"
+				onClick={() => {
+					setTabIndex(1)
+				}}
+			>
+				Fix in text tab.
+			</span>
+		</div>
+	)
+}
+
+function WelcomeMessage() {
+	const rightSideBarExpanded = useAppState(state => state.rightSidebarExpanded)
+	const toggleRightSidebar = useToggleRightSidebar()
+
+	return (
+		<div className="flex flex-col items-center justify-center gap-4 p-8 text-gray-600">
+			<div className="text-2xl font-light">JSON Viewer</div>
+			<div className="flex gap-4 items-center">
+				<IconBraces className="w-6 h-6" />
+				<IconBracketsLine className="w-6 h-6" />
+			</div>
+			<div className="text-sm">
+				Paste JSON by pressing{" "}
+				<kbd className="px-1 py-0.5 bg-gray-100 rounded">P</kbd> or switch to
+				the text tab to begin.{" "}
+				<span
+					className="text-blue-500 hover:underline cursor-pointer"
+					onClick={() => {
+						toggleRightSidebar()
+					}}
+				>
+					{rightSideBarExpanded ? "Hide help." : "View help."}
+				</span>
+			</div>
+		</div>
+	)
 }
 
 export function ViewerTab(props: { className?: string }) {
 	const { className } = props
 
 	const parseResult = useAppState(state => state.parseResult)
+	const text = useAppState(state => state.text)
 
 	return (
 		<div className={clsx(className)}>
-			{parseResult.type === "success" ? (
+			{text.length === 0 ? (
+				<WelcomeMessage />
+			) : parseResult.type === "success" ? (
 				<ViewerTabSuccessfulParse parseResult={parseResult} />
 			) : (
 				<ViewerTabFailedParse />
