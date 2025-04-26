@@ -1,6 +1,6 @@
 import { makeTypeGuard, unreachable } from "./utils"
 
-export type ASTNode =
+export type ASTNode = (
 	| {
 			type: "object"
 			children: Array<[name: string, node: ASTNode]>
@@ -22,6 +22,9 @@ export type ASTNode =
 			children: ASTNode[]
 	  }
 	| { type: "null" }
+) & {
+	path: string[]
+}
 
 export type NodeTypesWithChildren = Extract<ASTNode["type"], "object" | "array">
 export type ASTNodeWithChildren = Extract<
@@ -41,24 +44,46 @@ export const isNodeWithValue = makeTypeGuard<ASTNode, ASTNodeWithValue>(node =>
 	isNodeWithChildren(node) ? { false: node } : { true: node }
 )
 
-export function jsonToAST(input: unknown): ASTNode {
+export function jsonToAST(input: unknown, pathSoFar: string[] = []): ASTNode {
 	if (input === null) {
-		return { type: "null" }
+		return {
+			type: "null",
+			path: pathSoFar,
+		}
 	} else if (typeof input === "string") {
-		return { type: "string", value: input }
+		return {
+			type: "string",
+			value: input,
+			path: pathSoFar,
+		}
 	} else if (typeof input === "number") {
-		return { type: "number", value: input }
+		return {
+			type: "number",
+			value: input,
+			path: pathSoFar,
+		}
 	} else if (typeof input === "boolean") {
-		return { type: "boolean", value: input }
+		return {
+			type: "boolean",
+			value: input,
+			path: pathSoFar,
+		}
 	} else if (Array.isArray(input)) {
-		return { type: "array", children: input.map(item => jsonToAST(item)) }
+		return {
+			type: "array",
+			children: input.map((item, i) =>
+				jsonToAST(item, [...pathSoFar, String(i)])
+			),
+			path: pathSoFar,
+		}
 	} else if (typeof input === "object") {
 		return {
 			type: "object",
 			children: Object.entries(input).map(([key, value]): [string, ASTNode] => [
 				key,
-				jsonToAST(value),
+				jsonToAST(value, [...pathSoFar, key]),
 			]),
+			path: pathSoFar,
 		}
 	} else {
 		throw new Error(`Unexpected input for jsonToAST: ${JSON.stringify(input)}`)

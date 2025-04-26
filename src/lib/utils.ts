@@ -4,6 +4,16 @@ export type Result<S, F> =
 	| { type: "success"; value: S }
 	| { type: "failure"; error: F }
 
+export const Result = {
+	unwrap<S, F>(result: Result<S, F>): S {
+		if (result.type === "success") {
+			return result.value
+		}
+
+		throw result.error
+	},
+}
+
 export function unreachable(x: never): never {
 	throw new Error(`Expected value never to occur: ${JSON.stringify(x)}`)
 }
@@ -179,5 +189,19 @@ export function makeDeferred<T>(): Deferred<T> {
 		promise,
 		resolve: resolve!,
 		reject: reject!,
+	}
+}
+
+export function tryJsonParse(input: string): Result<unknown, Error> {
+	try {
+		return {
+			type: "success",
+			value: JSON.parse(input),
+		}
+	} catch (err) {
+		return {
+			type: "failure",
+			error: err as Error,
+		}
 	}
 }

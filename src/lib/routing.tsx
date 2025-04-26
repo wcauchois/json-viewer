@@ -1,7 +1,14 @@
 import { ReactNode, useEffect } from "react"
 import { useAppState } from "../state/app"
-import { isDefined, makeDeferred, useOnInitialMount } from "./utils"
+import {
+	isDefined,
+	makeDeferred,
+	Result,
+	tryJsonParse,
+	useOnInitialMount,
+} from "./utils"
 import { worker } from "../worker/workerClient"
+import { z } from "zod"
 
 // Some stuff cribbed from: https://github.com/topaz/paste/blob/master/index.html
 
@@ -9,11 +16,43 @@ import { worker } from "../worker/workerClient"
 // be lazy and assume there's only ever one router.
 let shouldForceHistoryPush = false
 
+const routeStateSchema = z.object({
+	text: z.string(),
+	initiallyFocusedPath: z.array(z.string()).optional(),
+})
+
+type RouteState = z.infer<typeof routeStateSchema>
+
 export async function forceHistoryPush() {
 	shouldForceHistoryPush = true
 }
 
-async function getTextFromHash() {
+function parseRouteState(hashValue: string): Result<RouteState, Error> {
+	const decoded = decodeURIComponent(hashValue)
+	const jsonParseResult = tryJsonParse(decoded)
+	if (jsonParseResult.type === "failure") {
+		return jsonParseResult
+	}
+	const schemaParseResult = routeStateSchema.safeParse(jsonParseResult.value)
+	if (schemaParseResult.success) {
+		return {
+			type: "success",
+			value: schemaParseResult.data,
+		}
+	} else {
+		return {
+			type: "failure",
+			error: schemaParseResult.error,
+		}
+	}
+}
+
+function serializeRouteState(routeState: RouteState): string {
+	const jsonSerialized = JSON.stringify(routeState)
+	return encodeURIComponent(jsonSerialized)
+}
+
+async function getRouteStateFromHash(): Promise<RouteState | undefined> {
 	const base64 = location.hash.replace(/^#\//, "")
 	if (base64.length === 0) {
 		return
@@ -48,14 +87,15 @@ async function getTextFromHash() {
 
 		// Uint8Array -> String
 		const decoder = new TextDecoder()
-		return decoder.decode(decompressed)
+		const serializedState = decoder.decode(decompressed)
+		return Result.unwrap(parseRouteState(serializedState))
 	} catch (err) {
 		console.error("Error converting hash:", err)
 		return
 	}
 }
 
-async function convertTextToCompressedBase64(text: string) {
+async function convertStringToCompressedBase64(text: string) {
 	// String -> Uint8Array
 	const encoder = new TextEncoder()
 	const encoded = encoder.encode(text)
@@ -80,8 +120,10 @@ async function convertTextToCompressedBase64(text: string) {
 	return base64
 }
 
-async function createUrlForText(text: string) {
-	const base64 = await convertTextToCompressedBase64(text)
+async function createUrlForRouteState(state: RouteState) {
+	const base64 = await convertStringToCompressedBase64(
+		serializeRouteState(state)
+	)
 	const url = new URL(window.location.href)
 	url.hash = `#/${base64}`
 	return url
@@ -92,9 +134,9 @@ function useSyncRouteToState() {
 
 	// Sync state from hash on startup.
 	useOnInitialMount(async () => {
-		const textFromHash = await getTextFromHash()
-		if (isDefined(textFromHash)) {
-			setText(textFromHash)
+		const stateFromHash = await getRouteStateFromHash()
+		if (isDefined(stateFromHash)) {
+			setText(stateFromHash.text)
 		}
 	})
 
@@ -102,7 +144,7 @@ function useSyncRouteToState() {
 	useEffect(
 		() =>
 			useAppState.subscribe(async ({ text }) => {
-				const newUrl = await createUrlForText(text)
+				const newUrl = await createUrlForRouteState({ text })
 				if (shouldForceHistoryPush) {
 					window.history.pushState(text, "", newUrl)
 					shouldForceHistoryPush = false
@@ -116,9 +158,9 @@ function useSyncRouteToState() {
 	// Sync hash to state on hash change.
 	useEffect(() => {
 		async function listener() {
-			const textFromHash = await getTextFromHash()
-			if (isDefined(textFromHash)) {
-				setText(textFromHash)
+			const stateFromHash = await getRouteStateFromHash()
+			if (isDefined(stateFromHash)) {
+				setText(stateFromHash.text)
 			}
 		}
 		window.addEventListener("hashchange", listener)
