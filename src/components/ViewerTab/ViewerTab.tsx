@@ -158,8 +158,11 @@ function ViewerTabSuccessfulParse(props: {
 
 		// Find.
 		if (keyMatch(e, "cmd+f") || keyMatch(e, "/")) {
-			e.preventDefault()
-			dispatchFindState({ type: "show" })
+			if (!findState) {
+				e.preventDefault()
+				dispatchFindState({ type: "show" })
+			}
+			// If no find state, bubble up to browser find.
 		}
 	})
 

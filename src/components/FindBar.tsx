@@ -66,7 +66,7 @@ export function FindBar(props: FindBarProps) {
 				autoFocus
 				type="text"
 				className="grow text-sm outline-none"
-				placeholder="Find in JSON"
+				placeholder="Find in JSON (⌘+F again to open native browser find)"
 				value={findQuery}
 				onChange={e => setFindQuery(e.currentTarget.value)}
 				onKeyDown={handleKeyDown}
