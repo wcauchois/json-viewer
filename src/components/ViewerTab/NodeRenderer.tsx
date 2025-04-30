@@ -30,6 +30,7 @@ import React from "react"
 import { Modal } from "../designSystem/Modal"
 import { showSnackbar } from "../../state/snackbar"
 import { openContextMenu } from "../../state/contextMenu"
+import { createUrlForRouteState } from "../../lib/routing"
 
 const connectorStrokeColor = "rgb(156 163 175)"
 
@@ -174,6 +175,7 @@ export const NodeRenderer = React.memo(
 			findInfo,
 		} = props
 
+		const forceFocusNode = useAppState(state => state.forceFocusNode)
 		const setNodeExpanded = useAppState(state => state.setNodeExpanded)
 		const setNodesExpanded = useAppState(state => state.setNodesExpanded)
 		const expandedNodes = useAppState(state => state.expandedNodes)
@@ -360,6 +362,15 @@ export const NodeRenderer = React.memo(
 			]
 		)
 
+		const copyLinkToNode = useCallback(async () => {
+			const url = await createUrlForRouteState({
+				text: useAppState.getState().text,
+				initiallyFocusedPath: node.path,
+			})
+			await navigator.clipboard?.writeText(url.toString())
+			showSnackbar(`Copied link to clipboard`)
+		}, [node])
+
 		const handleContextMenu = useCallback(
 			(e: React.MouseEvent) => {
 				e.preventDefault()
@@ -388,6 +399,12 @@ export const NodeRenderer = React.memo(
 							{
 								name: "Collapse all",
 								action: () => setSelfAndAllChildrenExpanded(false),
+							},
+						],
+						[
+							{
+								name: "Copy link to node",
+								action: copyLinkToNode,
 							},
 						],
 					],
@@ -427,11 +444,17 @@ export const NodeRenderer = React.memo(
 			if (isCurrentMatch) {
 				containerRef.current?.scrollIntoView({
 					block: "nearest",
-					inline: "nearest",
 					behavior: "smooth",
 				})
 			}
 		}, [isCurrentMatch])
+
+		useEffect(() => {
+			if (node === forceFocusNode) {
+				containerRef.current?.focus()
+				containerRef.current?.scrollIntoView()
+			}
+		}, [forceFocusNode, node])
 
 		return (
 			<>

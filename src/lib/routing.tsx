@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useCallback, useEffect } from "react"
 import { useAppState } from "../state/app"
 import {
 	isDefined,
@@ -9,6 +9,7 @@ import {
 } from "./utils"
 import { worker } from "../worker/workerClient"
 import { z } from "zod"
+import { ASTNode } from "./jsonAst"
 
 // Some stuff cribbed from: https://github.com/topaz/paste/blob/master/index.html
 
@@ -120,7 +121,7 @@ async function convertStringToCompressedBase64(text: string) {
 	return base64
 }
 
-async function createUrlForRouteState(state: RouteState) {
+export async function createUrlForRouteState(state: RouteState) {
 	const base64 = await convertStringToCompressedBase64(
 		serializeRouteState(state)
 	)
@@ -129,14 +130,80 @@ async function createUrlForRouteState(state: RouteState) {
 	return url
 }
 
-function useSyncRouteToState() {
+function getNodesInPath(rootNode: ASTNode, inputPath: string[]) {
+	const result = [rootNode]
+
+	let currentNode = rootNode
+	const pathQueue = [...inputPath]
+
+	while (pathQueue.length > 0) {
+		const pathItem = pathQueue.shift()!
+		if (currentNode.type === "object") {
+			const child = currentNode.children.find(([name]) => name === pathItem)
+			if (!child) {
+				break
+			}
+
+			result.push(child[1])
+			currentNode = child[1]
+		} else if (currentNode.type === "array") {
+			const number = parseInt(pathItem, 10)
+			if (isNaN(number)) {
+				break
+			}
+
+			const child = currentNode.children[number]
+			if (!child) {
+				break
+			}
+
+			result.push(child)
+			currentNode = child
+		} else {
+			break
+		}
+	}
+
+	return result
+}
+
+function useSyncRouteStateToApp() {
 	const setText = useAppState(state => state.setText)
+	const setForceFocusNode = useAppState(state => state.setForceFocusNode)
+	const setNodesExpanded = useAppState(state => state.setNodesExpanded)
+
+	return useCallback(
+		(routeState: RouteState) => {
+			setText(routeState.text)
+
+			if (routeState.initiallyFocusedPath) {
+				const parseResult = useAppState.getState().parseResult
+				if (parseResult.type === "success") {
+					const nodesInPath = getNodesInPath(
+						parseResult.value.ast,
+						routeState.initiallyFocusedPath
+					)
+					setNodesExpanded(nodesInPath, true)
+					const lastNodeInPath = nodesInPath.at(-1)
+					if (lastNodeInPath) {
+						setForceFocusNode(lastNodeInPath)
+					}
+				}
+			}
+		},
+		[setForceFocusNode, setText, setNodesExpanded]
+	)
+}
+
+function useSyncRoute() {
+	const setText = useAppState(state => state.setText)
+	const syncRouteStateToApp = useSyncRouteStateToApp()
 
 	// Sync state from hash on startup.
 	useOnInitialMount(async () => {
 		const stateFromHash = await getRouteStateFromHash()
 		if (isDefined(stateFromHash)) {
-			setText(stateFromHash.text)
+			syncRouteStateToApp(stateFromHash)
 		}
 	})
 
@@ -160,12 +227,12 @@ function useSyncRouteToState() {
 		async function listener() {
 			const stateFromHash = await getRouteStateFromHash()
 			if (isDefined(stateFromHash)) {
-				setText(stateFromHash.text)
+				syncRouteStateToApp(stateFromHash)
 			}
 		}
 		window.addEventListener("hashchange", listener)
 		return () => window.removeEventListener("hashchange", listener)
-	}, [setText])
+	}, [setText, syncRouteStateToApp])
 
 	// Sync history state to app state on popstate
 	useEffect(() => {
@@ -182,7 +249,7 @@ function useSyncRouteToState() {
 }
 
 export function Router(props: { children: ReactNode }) {
-	useSyncRouteToState()
+	useSyncRoute()
 
 	return <>{props.children}</>
 }

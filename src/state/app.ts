@@ -24,6 +24,9 @@ export interface AppState {
 
 	rightSidebarExpanded: boolean
 	setRightSidebarExpanded(expanded: boolean): void
+
+	forceFocusNode?: ASTNode
+	setForceFocusNode(node: ASTNode | undefined): void
 }
 
 export type SuccessfulParseResult = Extract<
@@ -99,6 +102,11 @@ export const useAppState = create<AppState>((set, get) => ({
 	setRightSidebarExpanded(expanded) {
 		set({
 			rightSidebarExpanded: expanded,
+		})
+	},
+	setForceFocusNode(node) {
+		set({
+			forceFocusNode: node,
 		})
 	},
 }))
