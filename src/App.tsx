@@ -90,9 +90,7 @@ function App() {
 								/>
 							</IconWrap>
 						</div>
-						<div className="grow overflow-y-scroll">
-							{tabs[tabIndex].render({})}
-						</div>
+						{tabs[tabIndex].render({ className: "grow" })}
 					</div>
 				</Panel>
 

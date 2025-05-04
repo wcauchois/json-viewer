@@ -6,7 +6,7 @@ function Snackbar(props: { children: ReactNode }) {
 	const { children } = props
 
 	return (
-		<div className="fixed bottom-4 w-full flex justify-center">
+		<div className="fixed bottom-4 w-full flex justify-center pointer-events-none">
 			<motion.div
 				className="py-2 px-4 text-sm bg-black text-white rounded"
 				initial={{

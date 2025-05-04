@@ -31,6 +31,7 @@ import { Modal } from "../designSystem/Modal"
 import { showSnackbar } from "../../state/snackbar"
 import { openContextMenu } from "../../state/contextMenu"
 import { createUrlForRouteState } from "../../lib/routing"
+import { useRegisterElementForASTNode } from "../../state/elementToAstNode"
 
 const connectorStrokeColor = "rgb(156 163 175)"
 
@@ -455,6 +456,8 @@ export const NodeRenderer = React.memo(
 				containerRef.current?.scrollIntoView()
 			}
 		}, [forceFocusNode, node])
+
+		useRegisterElementForASTNode(containerRef, node)
 
 		return (
 			<>

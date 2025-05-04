@@ -29,7 +29,12 @@ export function TextTab(props: { className?: string }) {
 	})
 
 	return (
-		<div className={clsx(className, "w-full h-full flex flex-col")}>
+		<div
+			className={clsx(
+				className,
+				"w-full h-full flex flex-col overflow-y-scroll"
+			)}
+		>
 			<AboutModal ref={aboutModal} />
 			<Toolbar
 				itemGroups={[

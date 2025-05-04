@@ -28,6 +28,7 @@ import _ from "lodash"
 import { FindBar } from "../FindBar"
 import { ASTNode, isNodeWithChildren, visitAST } from "../../lib/jsonAst"
 import { IconBraces, IconBracketsLine, IconCross } from "../../lib/icons"
+import { ViewerStatusBar } from "./ViewerStatusBar"
 
 const emptyFunction = () => {}
 
@@ -271,7 +272,7 @@ function ViewerTabSuccessfulParse(props: {
 
 	return (
 		<div
-			className="flex flex-col text-sm relative"
+			className="flex flex-col text-sm relative overflow-y-scroll grow"
 			ref={containerRef}
 			onKeyDown={handleKeyDown}
 		>
@@ -397,7 +398,7 @@ export function ViewerTab(props: { className?: string }) {
 	const text = useAppState(state => state.text)
 
 	return (
-		<div className={clsx(className)}>
+		<div className={clsx(className, "flex flex-col overflow-hidden")}>
 			{text.length === 0 ? (
 				<WelcomeMessage />
 			) : parseResult.type === "success" ? (
@@ -405,6 +406,7 @@ export function ViewerTab(props: { className?: string }) {
 			) : (
 				<ViewerTabFailedParse />
 			)}
+			<ViewerStatusBar />
 		</div>
 	)
 }
