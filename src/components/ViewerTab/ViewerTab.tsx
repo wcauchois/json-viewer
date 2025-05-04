@@ -348,7 +348,7 @@ function ViewerTabFailedParse() {
 	const setTabIndex = useAppState(state => state.setTabIndex)
 
 	return (
-		<div className="flex items-center gap-2 p-4 text-sm text-red-700 bg-red-50 rounded-md m-4 border border-red-200">
+		<div className="flex items-center gap-2 p-4 text-sm text-red-700 bg-red-50 rounded-md m-4 border border-red-200 grow">
 			<IconCross />
 			Failed to parse JSON.{" "}
 			<span
@@ -368,7 +368,7 @@ function WelcomeMessage() {
 	const toggleRightSidebar = useToggleRightSidebar()
 
 	return (
-		<div className="flex flex-col items-center justify-center gap-4 p-8 text-gray-600">
+		<div className="flex flex-col items-center justify-center gap-4 p-8 text-gray-600 grow">
 			<div className="text-2xl font-light">JSON Viewer</div>
 			<div className="flex gap-4 items-center">
 				<IconBraces className="w-6 h-6" />
