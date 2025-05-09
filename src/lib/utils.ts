@@ -1,3 +1,4 @@
+import _ from "lodash"
 import { useEffect, useRef } from "react"
 
 export type Result<S, F> =
@@ -205,3 +206,19 @@ export function tryJsonParse(input: string): Result<unknown, Error> {
 		}
 	}
 }
+
+export const getHashForContent = _.memoize(async (content: string) => {
+	let normalizedContent = content
+	try {
+		normalizedContent = JSON.stringify(JSON.parse(content))
+	} catch (err) {
+		// No op
+	}
+	// TODO: Cache the hash (LRU?)
+	return buf2hex(
+		await window.crypto.subtle.digest(
+			"SHA-1",
+			new TextEncoder().encode(normalizedContent)
+		)
+	)
+})

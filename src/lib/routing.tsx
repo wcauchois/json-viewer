@@ -172,7 +172,7 @@ function useSyncRouteStateToApp() {
 	const setForceFocusNode = useAppState(state => state.setForceFocusNode)
 	const setNodesExpanded = useAppState(state => state.setNodesExpanded)
 
-	return useCallback(
+	const syncRouteStateToApp = useCallback(
 		(routeState: RouteState) => {
 			setText(routeState.text)
 
@@ -193,6 +193,8 @@ function useSyncRouteStateToApp() {
 		},
 		[setForceFocusNode, setText, setNodesExpanded]
 	)
+
+	return syncRouteStateToApp
 }
 
 function useSyncRoute() {
