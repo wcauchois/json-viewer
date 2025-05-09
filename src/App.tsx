@@ -16,6 +16,8 @@ import { ContextMenuRenderer } from "./components/ContextMenuRenderer"
 import { copyToClipboard, pasteFromClipboard } from "./lib/appActions"
 import { HelpPanel } from "./components/HelpPanel"
 import { QuestionCircleOutlined } from "@ant-design/icons"
+import { NameEditor } from "./components/NameEditor"
+import { useSyncNameToDocumentTitle } from "./state/nameStore"
 
 interface TabDefinition {
 	name: string
@@ -31,6 +33,7 @@ function App() {
 	}, [])
 
 	useAppStateStorage()
+	useSyncNameToDocumentTitle()
 
 	const tabIndex = useAppState(state => state.tabIndex)
 	const setTabIndex = useAppState(state => state.setTabIndex)
@@ -68,27 +71,34 @@ function App() {
 			<PanelGroup direction="horizontal" autoSaveId="main-panel-group">
 				<Panel id="main" order={2}>
 					<div className={"flex flex-col w-full h-full"}>
-						<div className="flex border-b justify-between">
-							<div className="flex border-r divide-x">
-								{tabs.map((tab, i) => (
-									<div
-										key={i}
-										className={clsx(
-											"px-2 py-1 text-sm cursor-pointer select-none",
-											i === tabIndex ? "bg-blue-50" : undefined
-										)}
-										onClick={() => setTabIndex(i)}
-									>
-										{tab.name}
-									</div>
-								))}
+						<div className="flex border-b items-center">
+							<div className="w-full flex">
+								<div className="flex border-r divide-x">
+									{tabs.map((tab, i) => (
+										<div
+											key={i}
+											className={clsx(
+												"px-2 py-1 text-sm cursor-pointer select-none",
+												i === tabIndex ? "bg-blue-50" : undefined
+											)}
+											onClick={() => setTabIndex(i)}
+										>
+											{tab.name}
+										</div>
+									))}
+								</div>
 							</div>
-							<IconWrap>
-								<QuestionCircleOutlined
-									className="cursor-pointer"
-									onClick={toggleRightSidebar}
-								/>
-							</IconWrap>
+							<div className="w-full">
+								<NameEditor />
+							</div>
+							<div className="w-full flex justify-end">
+								<div className="flex items-center px-2">
+									<QuestionCircleOutlined
+										className="cursor-pointer"
+										onClick={toggleRightSidebar}
+									/>
+								</div>
+							</div>
 						</div>
 						{tabs[tabIndex].render({ className: "grow" })}
 					</div>
@@ -105,10 +115,6 @@ function App() {
 			</PanelGroup>
 		</div>
 	)
-}
-
-function IconWrap(props: { children: ReactNode }) {
-	return <div className="flex items-center px-2">{props.children}</div>
 }
 
 export default App
